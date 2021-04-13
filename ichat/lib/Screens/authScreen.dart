@@ -13,9 +13,11 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
+  FocusNode _focusNode;
   String vefiId = "";
 
-  String _phoneNumber = "", smsCode = '';
+  int toggle = 0;
+  String _phoneNumber = "", smsCode = '', dialogCode;
   int flag = 0, reToken, timerCount = 30;
 
   TextEditingController _controller = TextEditingController();
@@ -23,11 +25,11 @@ class _AuthScreenState extends State<AuthScreen> {
 
   _login() async {
     FirebaseAuth auth = FirebaseAuth.instance;
-    try{
+    try {
       auth.verifyPhoneNumber(
-        phoneNumber: "+91$_phoneNumber",
+        phoneNumber: _phoneNumber,
         verificationCompleted: (PhoneAuthCredential credential) async {
-          showLoadingDialog(context, "Connecting");
+          // showLoadingDialog(context, "Connecting");
           // ANDROID ONLY!
 
           // Sign the user in (or link) with the auto-generated credential
@@ -41,80 +43,123 @@ class _AuthScreenState extends State<AuthScreen> {
         },
         verificationFailed: (FirebaseAuthException e) {
           if (e.code == 'invalid-phone-number') {
-            showDialogue(context, 'The provided phone number is not valid.');
+            _showBottomSheet("The provided phone number is not valid.");
           } else {
-            showDialogue(context, e.toString());
+            _showBottomSheet(e.toString());
           }
           // Handle other errors
         },
         codeSent: (String verificationId, int resendToken) async {
           setState(() {
             flag = 1;
+            toggle = 0;
+            _showBottomSheet("detecting SMS code");
+            _focusNode.requestFocus();
+            countDownTimer();
           });
-          countDownTimer();
           vefiId = verificationId;
           reToken = resendToken;
         },
         codeAutoRetrievalTimeout: (String verificationId) {
           vefiId = verificationId;
-          showDialogue(context, "enter the code");
+          _showBottomSheet("enter the code");
         },
         // codeAutoRetrievalTimeout:
       );
-    }on FirebaseAuthException catch(e){
-      if(e.code == "captcha-check-failed"){
-        showDialogue(context, "check your internet connection");
-      }else if(e.code == "invalid-phone-number"){
-        showDialogue(context, "invalid phone number");
-      }else if(e.code == "user-disabled"){
-        showDialogue(context, "this number is disabled");
-      }else{
-        showDialogue(context, "this number is disabled");
+    } on FirebaseAuthException catch (e) {
+      if (e.code == "captcha-check-failed") {
+        _showBottomSheet("check your internet connection");
+      } else if (e.code == "invalid-phone-number") {
+        _showBottomSheet("invalid phone number");
+      } else if (e.code == "user-disabled") {
+        _showBottomSheet("this number is disabled");
+      } else {
+        _showBottomSheet(e.toString());
       }
     }
   }
 
   _signInUser(context) async {
-    if(_controllerSMS.text.trim().length == 6){
-      Timer(Duration(milliseconds: 100), () {
-        CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation(Colors.blue),
-        );
-      });
-      try{
+    if (_controllerSMS.text.trim().length == 6) {
+      try {
         AuthCredential credential = PhoneAuthProvider.credential(
             verificationId: vefiId, smsCode: smsCode);
+        _showBottomSheet("Loading...");
         await FirebaseAuth.instance.signInWithCredential(credential);
 
         if (FirebaseAuth.instance.currentUser != null) {
           await Utility.addLoginStatus();
-          Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => ProfileScreen()));
+          Navigator.of(context)
+              .pushReplacement(MaterialPageRoute(builder: (context) => ProfileScreen()));
         }
-      }on FirebaseAuthException catch(e){
-        if(e.code == 'invalid-verification-code'){
-          showDialogue(context, "invalid code");
-        }else{
-          showDialogue(context, e.toString());
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'invalid-verification-code') {
+          _showBottomSheet("invalid code");
+        } else {
+          _showBottomSheet(e.toString());
         }
       }
-    }else if(_controllerSMS.text.trim().isEmpty){
-      showDialogue(context, "provide a code");
-    }else if(_controllerSMS.text.trim().length != 6){
-      showDialogue(context, "enter the 6 digit code");
+    } else if (_controllerSMS.text.trim().isEmpty) {
+      _showBottomSheet("provide a code");
+    } else if (_controllerSMS.text.trim().length != 6) {
+      _showBottomSheet("enter the 6 digit code");
+    }
+  }
+
+  _changeState() {
+    setState(() {
+      _focusNode.unfocus();
+      toggle = 1;
+    });
+
+    if(dialogCode != "Loading..."){
+      if(dialogCode[0] == "d"){
+        Future.delayed(Duration(seconds: 32), () {
+          setState(() {
+            toggle = 0;
+          });
+        });
+      }else if(dialogCode[0] != "W"){
+        Future.delayed(Duration(seconds: 2), () {
+          setState(() {
+            toggle = 0;
+            _focusNode.requestFocus();
+          });
+        });
+      }
     }
   }
 
   @override
   void initState() {
     super.initState();
+    _focusNode = FocusNode();
   }
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
 
     return Scaffold(
+        bottomSheet: toggle == 0
+            ? null
+            : bottomSheet(
+            dialogCode,
+            login: _login,
+            showBottomSheet: _showBottomSheet,
+            editStateFunction: (){
+              setState(() {
+                toggle = 0;
+                _focusNode.requestFocus();
+              });
+            },
+          okStateFunction: (){
+              setState(() {
+                toggle = 0;
+              });
+              _showBottomSheet("Loading...");
+          }
+        ),
+
         resizeToAvoidBottomInset: true,
         body: Stack(
           children: [
@@ -123,92 +168,32 @@ class _AuthScreenState extends State<AuthScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 flag != 0 ? _secondPage() : _firstPage(),
-                bottomButton(),
+                Container(
+                  margin: EdgeInsets.all(10),
+                  child: FloatingActionButton(
+                    onPressed: () {
+                      if (flag == 0) {
+                        if (_controller.text.isEmpty) {
+                          _showBottomSheet("Number is Required");
+                        } else if (_controller.text.length != 10) {
+                          _showBottomSheet("Contact Number Length != 10");
+                        } else {
+                          _phoneNumber = "+91${_controller.text.trim()}";
+                          _showBottomSheet("We will be verifying\nthe phone number\n\n "
+                              "$_phoneNumber\n\n "
+                              "Is this OK, or would you\n like to edit the number?");
+                        }
+                      } else if (flag == 1) {
+                        _signInUser(context);
+                      }
+                    },
+                    child: Icon(Icons.arrow_forward_ios_sharp),
+                  ),
+                )
               ],
             )
           ],
         ));
-  }
-
-  confirmNumber(BuildContext context, String e) {
-    showDialog(
-        context: context,
-        builder: (BuildContext c) => AlertDialog(
-              contentPadding: EdgeInsets.all(0),
-              backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30)),
-              content: Wrap(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(
-                        top: 20, bottom: 10, left: 20.0, right: 20),
-                    child: Text("We will be verifying the phone number",
-                        style: GoogleFonts.muli(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                            color: Colors.black)),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                        bottom: 10, left: 20.0, right: 20),
-                    child: Text(e,
-                        style: GoogleFonts.muli(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: Colors.black)),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                        bottom: 20, left: 20.0, right: 20),
-                    child: Text(
-                        "Is this OK, or would you like to edit the number?",
-                        style: GoogleFonts.muli(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                            color: Colors.black)),
-                  ),
-                ],
-              ),
-              actions: [
-                FloatingActionButton(
-                  backgroundColor: Colors.white,
-                  onPressed: () {
-                    Timer(Duration(milliseconds: 100), () {
-                      Navigator.of(context).pop();
-                    });
-                  },
-                  child: Text(
-                    "Edit",
-                    style: GoogleFonts.muli(
-                      color: Colors.blue,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                FloatingActionButton(
-                  backgroundColor: Colors.white,
-                  onPressed: () {
-                    _controller.text = "";
-                    _phoneNumber = e;
-                    _login();
-                    Timer(Duration(milliseconds: 50), () {
-                      showLoadingDialog(context, "Loading...");
-                    });
-                    Navigator.of(context).pop();
-                  },
-                  child: Text(
-                    "Ok",
-                    style: GoogleFonts.muli(
-                      color: Colors.blue,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
-                )
-              ],
-            ));
   }
 
   _secondPage() {
@@ -234,7 +219,14 @@ class _AuthScreenState extends State<AuthScreen> {
               height: 20,
             ),
             Text(
-              "Waiting to automatically detect an SMS sent to $_phoneNumber",
+              "Waiting to automatically detect an SMS sent",
+              style: GoogleFonts.muli(
+                  fontWeight: FontWeight.w300,
+                  fontSize: width / 28,
+                  color: Colors.grey[800]),
+            ),
+            Text(
+              "to $_phoneNumber",
               style: GoogleFonts.muli(
                   fontWeight: FontWeight.w300,
                   fontSize: width / 28,
@@ -242,9 +234,11 @@ class _AuthScreenState extends State<AuthScreen> {
             ),
             TextButton(
               onPressed: () {
-                setState(() {
-                  flag = 0;
-                });
+                if(timerCount == 0){
+                  Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (context)=>AuthScreen())
+                  );
+                }
               },
               child: Text(
                 "Wrong number ?",
@@ -266,6 +260,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 textAlign: TextAlign.center,
                 showCursor: false,
                 keyboardType: TextInputType.number,
+                focusNode: _focusNode,
                 decoration: InputDecoration(
                   focusedBorder: UnderlineInputBorder(
                       borderSide:
@@ -287,42 +282,46 @@ class _AuthScreenState extends State<AuthScreen> {
               style: GoogleFonts.muli(
                   fontWeight: FontWeight.w500,
                   fontSize: width / 28,
-                  color: Colors.grey[800]
-              ),
+                  color: Colors.grey[800]),
             ),
-            SizedBox(height: 16,),
+            SizedBox(
+              height: 16,
+            ),
             Column(
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal:26.0, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 26.0, vertical: 4),
                       child: Text(
-                        "Resent SMS",
+                        "Resend SMS",
                         style: GoogleFonts.muli(
                             fontWeight: FontWeight.w500,
                             fontSize: width / 26,
-                            color: Colors.grey[800]
-                        ),
+                            color: Colors.grey[800]),
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal:26.0, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 26.0, vertical: 4),
                       child: Text(
                         "0 : $timerCount",
                         style: GoogleFonts.muli(
                             fontWeight: FontWeight.w500,
                             fontSize: width / 26,
-                            color: Colors.grey[800]
-                        ),
+                            color: Colors.grey[800]),
                       ),
                     )
                   ],
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Divider(thickness: 1, color: Colors.grey[400],),
+                  child: Divider(
+                    thickness: 1,
+                    color: Colors.grey[400],
+                  ),
                 )
               ],
             )
@@ -367,12 +366,13 @@ class _AuthScreenState extends State<AuthScreen> {
             Container(
               width: width / 2,
               child: TextField(
-                autofocus: true,
+                autofocus: toggle == 0 ? true : false,
                 controller: _controller,
                 style: TextStyle(fontSize: width / 20, color: Colors.black),
                 textAlign: TextAlign.center,
                 cursorColor: Colors.blue,
                 keyboardType: TextInputType.number,
+                focusNode: _focusNode,
                 decoration: InputDecoration(
                   focusedBorder: UnderlineInputBorder(
                       borderSide:
@@ -388,7 +388,7 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   countDownTimer() async {
-    for (int x = 30; x > 0; x--) {
+    while(timerCount > 0) {
       await Future.delayed(Duration(seconds: 1)).then((_) {
         setState(() {
           timerCount -= 1;
@@ -397,27 +397,9 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  bottomButton(){
-    return Container(
-      margin: EdgeInsets.all(20),
-      child: FloatingActionButton(
-        onPressed: () {
-          if (flag == 0) {
-            if (_controller.text.isEmpty) {
-              showDialogue(context, "Number is Required");
-            } else if (_controller.text.length != 10) {
-              showDialogue(context, "Contact Number Length != 10");
-              _controller.text = "";
-            } else {
-              confirmNumber(context, _controller.text.trim());
-            }
-          } else if(flag == 1) {
-            _signInUser(context);
-          }
-        },
-        child: Icon(Icons.arrow_forward_ios_sharp),
-      ),
-    );
+  _showBottomSheet(code) {
+    dialogCode = code;
+    _changeState();
   }
 
   @override
@@ -426,5 +408,6 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
     _controller.dispose();
     _controllerSMS.dispose();
+    _focusNode.dispose();
   }
 }

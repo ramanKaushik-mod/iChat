@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ichat/Screens/authScreen.dart';
@@ -19,18 +18,13 @@ class _LogoScreenState extends State<LogoScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    _initializeApp();
     _checkStatus();
-  }
-
-  _initializeApp()async {
-    await Firebase.initializeApp();
   }
 
 
   _checkStatus()async{
     int status = await Utility.getLoginStatus();
-    Timer(Duration(seconds: 2), (){
+    Future.delayed(Duration(seconds: 2), (){
       if(status == 0){
         Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=> ProfileScreen()));
       }else{
