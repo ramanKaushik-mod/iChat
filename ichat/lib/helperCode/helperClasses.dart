@@ -5,7 +5,7 @@ import 'dart:typed_data';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 
@@ -51,6 +51,12 @@ class Utility{
   static addUserName(String name)async{
     await SharedPreferences.getInstance()
         .then((value) => value.setString(userName, name));
+  }
+
+
+  // _exit the app
+  static exitApp(context){
+    SystemNavigator.pop();
   }
 }
 
@@ -114,89 +120,23 @@ class DialogUtility {
 
 
 }
-//
-// class FDP{
-//   int toggle = 0;
-//   StatefulWidget widget;
-//   FocusNode focusNode;
-//   FDP({this.widget, this.focusNode});
-//
-//   changeState() {
-//     widget.createState().setState(() {
-//
-//     });
-//     this.widget.createState().setState(() {
-//       this.focusNode.unfocus();
-//       toggle = 1;
-//     });
-//     Future.delayed(Duration(seconds: 2), () {
-//       setState(() {
-//         toggle = 0;
-//         _focusNode.requestFocus();
-//       });
-//     });
-//   }
-//
-//
-// }
 
-//
-// class DialogWidget {
-//
-//   Future<int> value;
-//
-//   showLoadingDialog(context, e){
-//     final width = MediaQuery.of(context).size.width;
-//     return showDialog(context: context, builder: (BuildContext c){
-//
-//       // Future.delayed(Duration(seconds: 3),(){
-//       //   Navigator.of(context).pop();
-//       // });
-//
-//       return dialog(width, e);
-//     });
-//   }
-//
-//   dialog(width, e, {int t}){
-//     if(t != null){
-//       Future.delayed(Duration(seconds: 5), () {
-//         value = Future.value(2);
-//       });
-//     }
-//     return AlertDialog(
-//       contentPadding: EdgeInsets.all(0),
-//       backgroundColor: Colors.transparent,
-//       content: Card(
-//         elevation: 0,
-//         shape: RoundedRectangleBorder(
-//             borderRadius: BorderRadius.circular(30)),
-//         child: Wrap(
-//           children: [
-//             Align(
-//               alignment: Alignment.center,
-//               child: Padding(
-//                 padding: const EdgeInsets.all(20.0),
-//                 child: Row(
-//                   children: [
-//                     CircularProgressIndicator(
-//                       valueColor: AlwaysStoppedAnimation(Colors.blue),
-//                     ),
-//                     SizedBox(width: 20,),
-//                     Text(
-//                       e,
-//                       style: TextStyle(
-//                         color: Colors.grey[800],
-//                         fontWeight: FontWeight.w500,
-//                         fontSize: width/24,
-//                       ),
-//                     ),
-//                   ],
-//                 ),
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
+class ForAnimation extends ChangeNotifier
+{
+  var widthForContainer = 30.0;
+  double getWidthOfContainer() => widthForContainer;
+
+  changeWidthOfContainer(){
+    widthForContainer = 60;
+    notifyListeners();
+    Future.delayed(Duration(seconds: 4),(){
+      shrinkWidth();
+    });
+  }
+
+  shrinkWidth(){
+    widthForContainer = 30;
+    notifyListeners();
+  }
+
+}
