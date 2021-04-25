@@ -1,27 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:ichat/Screens/authScreen.dart';
+import 'package:ichat/Screens/checkPurpose.dart';
 import 'package:ichat/Screens/logoScreen.dart';
 
-
-
 class RouteGenerator {
-  static Route<dynamic> generateRoute(RouteSettings settings){
+  static Route<dynamic> generateRoute(RouteSettings settings) {
     // final args = settings.arguments;
 
-    switch (settings.name){
+    switch (settings.name) {
       case '/':
-        return MaterialPageRoute(builder: (_)=>LogoScreen());
+        return MaterialPageRoute(builder: (_) => LogoScreen());
 
       case '/authScreen':
-        return MaterialPageRoute(builder: (_)=>AuthScreen());
+        return MaterialPageRoute(builder: (_) => AuthScreen());
+      case '/checkPurpose':
+        return MaterialPageRoute(builder: (_) => CheckPurpose());
       default:
         return _errorRoute();
-
     }
   }
 
-  static Route<dynamic> _errorRoute(){
-    return MaterialPageRoute(builder: (_){
+  static Route<dynamic> _errorRoute() {
+    return MaterialPageRoute(builder: (_) {
       return Scaffold(
         body: Center(
           child: Text('Error'),
@@ -30,4 +30,3 @@ class RouteGenerator {
     });
   }
 }
-

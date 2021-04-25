@@ -3,9 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ichat/Screens/authScreen.dart';
-import 'package:ichat/Screens/profileScreen.dart';
 import 'package:ichat/helperCode/helperClasses.dart';
-
 
 class LogoScreen extends StatefulWidget {
   @override
@@ -13,22 +11,20 @@ class LogoScreen extends StatefulWidget {
 }
 
 class _LogoScreenState extends State<LogoScreen> {
-
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _checkStatus();
   }
 
-
-  _checkStatus()async{
+  _checkStatus() async {
     int status = await Utility.getLoginStatus();
-    Future.delayed(Duration(seconds: 2), (){
-      if(status == 0){
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=> ProfileScreen()));
-      }else{
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=> AuthScreen()));
+    Future.delayed(Duration(seconds: 2), () {
+      if (status == 0) {
+        Navigator.pushNamed(context, '/checkPurpose');
+      } else {
+        Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => AuthScreen()));
       }
     });
   }
@@ -37,6 +33,12 @@ class _LogoScreenState extends State<LogoScreen> {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.pushNamed(context, '/checkPurpose');
+        },
+        child: Icon(Icons.arrow_forward_ios),
+      ),
       body: Container(
         width: width,
         child: Column(
@@ -58,8 +60,7 @@ class _LogoScreenState extends State<LogoScreen> {
                   style: GoogleFonts.laBelleAurore(
                       fontWeight: FontWeight.w600,
                       fontSize: 25,
-                      color: Colors.grey[350]
-                  ),
+                      color: Colors.grey[350]),
                 )
               ],
             )

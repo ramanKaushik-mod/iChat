@@ -88,9 +88,9 @@ class _AuthScreenState extends State<AuthScreen> {
         await FirebaseAuth.instance.signInWithCredential(credential);
 
         if (FirebaseAuth.instance.currentUser != null) {
-          await Utility.addLoginStatus();
-          Navigator.of(context)
-              .pushReplacement(MaterialPageRoute(builder: (context) => ProfileScreen()));
+          Utility.addContactToPreference(contact: _phoneNumber);
+          Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => ProfileScreen()));
         }
       } on FirebaseAuthException catch (e) {
         if (e.code == 'invalid-verification-code') {
@@ -112,14 +112,14 @@ class _AuthScreenState extends State<AuthScreen> {
       toggle = 1;
     });
 
-    if(dialogCode != "Loading..."){
-      if(dialogCode[0] == "d"){
+    if (dialogCode != "Loading...") {
+      if (dialogCode[0] == "d") {
         Future.delayed(Duration(seconds: 32), () {
           setState(() {
             toggle = 0;
           });
         });
-      }else if(dialogCode[0] != "W"){
+      } else if (dialogCode[0] != "W") {
         Future.delayed(Duration(seconds: 2), () {
           setState(() {
             toggle = 0;
@@ -138,28 +138,22 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
         bottomSheet: toggle == 0
             ? null
-            : bottomSheet(
-            dialogCode,
-            login: _login,
-            showBottomSheet: _showBottomSheet,
-            editStateFunction: (){
-              setState(() {
-                toggle = 0;
-                _focusNode.requestFocus();
-              });
-            },
-          okStateFunction: (){
-              setState(() {
-                toggle = 0;
-              });
-              _showBottomSheet("Loading...");
-          }
-        ),
-
+            : bottomSheet(dialogCode,
+                login: _login,
+                showBottomSheet: _showBottomSheet, editStateFunction: () {
+                setState(() {
+                  toggle = 0;
+                  _focusNode.requestFocus();
+                });
+              }, okStateFunction: () {
+                setState(() {
+                  toggle = 0;
+                });
+                _showBottomSheet("Loading...");
+              }),
         resizeToAvoidBottomInset: true,
         body: Stack(
           children: [
@@ -179,7 +173,8 @@ class _AuthScreenState extends State<AuthScreen> {
                           _showBottomSheet("Contact Number Length != 10");
                         } else {
                           _phoneNumber = "+91${_controller.text.trim()}";
-                          _showBottomSheet("We will be verifying\nthe phone number\n\n "
+                          _showBottomSheet(
+                              "We will be verifying\nthe phone number\n\n "
                               "$_phoneNumber\n\n "
                               "Is this OK, or would you\n like to edit the number?");
                         }
@@ -234,10 +229,9 @@ class _AuthScreenState extends State<AuthScreen> {
             ),
             TextButton(
               onPressed: () {
-                if(timerCount == 0){
+                if (timerCount == 0) {
                   Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (context)=>AuthScreen())
-                  );
+                      MaterialPageRoute(builder: (context) => AuthScreen()));
                 }
               },
               child: Text(
@@ -388,7 +382,7 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   countDownTimer() async {
-    while(timerCount > 0) {
+    while (timerCount > 0) {
       await Future.delayed(Duration(seconds: 1)).then((_) {
         setState(() {
           timerCount -= 1;
@@ -404,7 +398,6 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
     _controller.dispose();
     _controllerSMS.dispose();

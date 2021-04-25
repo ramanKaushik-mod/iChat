@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:ichat/Screens/checkPurpose.dart';
 import 'package:ichat/Screens/imageCapture.dart';
 import 'package:ichat/helperCode/helperClasses.dart';
 import 'package:ichat/helperCode/helperFunctions.dart';
@@ -27,14 +27,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _focusNode = FocusNode();
   }
 
-
   _changeState() {
     setState(() {
       toggle = 1;
       _focusNode.unfocus();
     });
 
-    if(dialogCode != "Loading..."){
+    if (dialogCode != "Loading...") {
       Future.delayed(Duration(seconds: 2), () {
         setState(() {
           toggle = 0;
@@ -66,9 +65,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final width = MediaQuery.of(context).size.width;
     return SafeArea(
       child: Scaffold(
-        bottomSheet: toggle == 0
-            ? null
-            : bottomSheet(dialogCode),
+        bottomSheet: toggle == 0 ? null : bottomSheet(dialogCode),
         body: Stack(
           children: [
             Column(
@@ -78,17 +75,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Container(
                   margin: EdgeInsets.all(20),
                   child: FloatingActionButton(
-                    onPressed: ()async {
-                      if(_controller.text.trim().length > 2){
+                    onPressed: () async {
+                      if (_controller.text.trim().length > 2) {
                         await Utility.addUserName(_controller.text.trim());
+                        Map<String, dynamic> map = {
+                          'contactNo': await Utility.getContactFromPreference(),
+                          'name': _controller.text.trim(),
+                          'imageStr': await Utility.getImageFromPreferences()
+                        };
                         _showBottomSheet("Loading...");
-                        // FirebaseUtility.logout();
-                        Future.delayed(Duration(seconds: 2), () {
-                          Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(
-                                  builder: (context) => CheckPurpose()));
+                        FirebaseUtility.addUserToUsers(map, nextPage: ()async{
+                          await Utility.addLoginStatus();
+                          Phoenix.rebirth(context);
                         });
-                      }else{
+                      } else {
                         _showBottomSheet("enter a valid name ( length > 3 )");
                       }
                     },
@@ -144,12 +144,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: InkWell(
                         onTap: () {
                           Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => ImageCapture(function:(){
-                                imageFromPreferences = null;
-                                if(imageFromPreferences == null){
-                                  _loadImageFromPreferences();
-                                }
-                              })));
+                              builder: (context) => ImageCapture(function: () {
+                                    imageFromPreferences = null;
+                                    if (imageFromPreferences == null) {
+                                      _loadImageFromPreferences();
+                                    }
+                                  })));
                         },
                         child: Container(
                           padding: EdgeInsets.all(2),
@@ -177,12 +177,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       onTap: () {
                         Navigator.of(context).push(MaterialPageRoute(
                             builder: (context) => ImageCapture(
-                              function: (){
-                                if(imageFromPreferences == null){
-                                  _loadImageFromPreferences();
-                                }
-                              },
-                            )));
+                                  function: () {
+                                    if (imageFromPreferences == null) {
+                                      _loadImageFromPreferences();
+                                    }
+                                  },
+                                )));
                       },
                       child: CircleAvatar(
                         backgroundColor: Color(0xFFF2F2F3),
@@ -224,9 +224,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         fontWeight: FontWeight.w600,
                         fontSize: width / 20,
                         color: Colors.grey[500])),
-                onChanged: (value) {
-
-                },
+                onChanged: (value) {},
               ),
             )
           ],
@@ -234,5 +232,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-
 }

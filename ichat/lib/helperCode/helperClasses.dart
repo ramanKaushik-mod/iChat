@@ -1,83 +1,159 @@
-
-
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ichat/Models/userModel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 
 final String loginStatusKey = "LOGIN_STATUS_KEY";
 final String userName = "USER_NAME";
 final String imgKey = 'IMAGE_KEY';
+final String contactNo = 'CONTACT_NUMBER';
 
-class Utility{
+class Utility {
+  static SharedPreferences _preferences;
+  static addLoginStatus() async {
+    _preferences = await SharedPreferences.getInstance();
+    _preferences.setInt(loginStatusKey, 0);
+  }
 
-  static addLoginStatus() async{
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    sharedPreferences.setInt(loginStatusKey, 0);
+  static getLoginStatus() async {
+    _preferences = await SharedPreferences.getInstance();
+    return _preferences.getInt(loginStatusKey);
   }
-  static getLoginStatus() async{
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    return sharedPreferences.getInt(loginStatusKey);
-  }
-  static clearPreferences()async{
+
+  static clearPreferences() async {
     await SharedPreferences.getInstance().then((value) => value.clear());
   }
 
-  static Future<bool> saveImageToPreferences(String value) async{
-    final SharedPreferences preferences = await SharedPreferences.getInstance();
-    return preferences.setString(imgKey, value);
+  static Future<bool> saveImageToPreferences(String value) async {
+    _preferences = await SharedPreferences.getInstance();
+    return _preferences.setString(imgKey, value);
   }
 
   static Future<String> getImageFromPreferences() async {
-    final SharedPreferences preferences = await SharedPreferences.getInstance();
-    return preferences.getString(imgKey);
+    _preferences = await SharedPreferences.getInstance();
+    return _preferences.getString(imgKey);
   }
 
-  static String base64String(Uint8List data){
+  static String base64String(Uint8List data) {
     return base64Encode(data);
   }
 
-  static Image imageFromBase64String(String base64String){
+  static Image imageFromBase64String(String base64String) {
     return Image.memory(
-      base64Decode(base64String), fit: BoxFit.fill,
+      base64Decode(base64String),
+      fit: BoxFit.fill,
     );
   }
 
   // User Info
-  static addUserName(String name)async{
+  static addUserName(String name) async {
     await SharedPreferences.getInstance()
         .then((value) => value.setString(userName, name));
   }
 
+  static addContactToPreference({@required String contact}) async {
+    await SharedPreferences.getInstance()
+        .then((value) => value.setString(contactNo, contact));
+  }
+
+  static getContactFromPreference() async {
+    _preferences = await SharedPreferences.getInstance();
+    return _preferences.get(contactNo);
+  }
 
   // _exit the app
-  static exitApp(context){
+  static exitApp(context) {
     SystemNavigator.pop();
   }
 }
 
-
-class FirebaseUtility{
-  static logout() async{
+class FirebaseUtility {
+  static logout() async {
     await FirebaseAuth.instance.signOut();
+  }
+
+  static addUserToUsers(Map<String, dynamic> data, {Function nextPage}) async {
+    DocumentReference documentReference =
+        FirebaseFirestore.instance.collection('Users').doc(data['contactNo']);
+
+    await documentReference.get().then((value) {
+      if (value.exists) {
+        documentReference
+            .update({'name': data['name'], 'imageStr': data['imageStr']});
+      } else {
+        documentReference.set(data);
+      }
+      nextPage();
+    });
+  }
+
+  static Future<Map<String, dynamic>> findUser(
+      {@required String contactNumber}) async {
+    Map<String, dynamic> map;
+    await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(contactNumber)
+        .get()
+        .then((DocumentSnapshot documentSnapshot) {
+      if (documentSnapshot.exists) {
+        map = documentSnapshot.data();
+      }
+    });
+    return map;
+  }
+
+  static updateRequests(Map<String, dynamic> requestTo) async {
+    var contactNo = await Utility.getContactFromPreference();
+    Map<String, dynamic> thisUser = await findUser(contactNumber: contactNo);
+    //this User's database
+    await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(thisUser['contactNo'])
+        .collection('PendingList')
+        .doc(requestTo['contactNo'])
+        .set(requestTo);
+
+    //Requested User's database
+    await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(requestTo['contactNo'])
+        .collection('ForApproveList')
+        .doc(thisUser['contactNo'])
+        .set(thisUser);
+  }
+
+  static cancelRequest(
+      {@required String requester, @required String requested}) async {
+    await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(requester)
+        .collection('PendingList')
+        .doc(requested)
+        .delete();
+
+    await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(requested)
+        .collection('ForApproveList')
+        .doc(requester)
+        .delete();
   }
 }
 
-
 class DialogUtility {
-
   static int status = 0;
 
   static showLoadingDialog(BuildContext context, String e) {
     final width = MediaQuery.of(context).size.width;
     return showDialog(
         context: context,
-        builder: (BuildContext c){
-          if(status != 0){
+        builder: (BuildContext c) {
+          if (status != 0) {
             Navigator.of(context).pop();
           }
           return AlertDialog(
@@ -98,13 +174,15 @@ class DialogUtility {
                           CircularProgressIndicator(
                             valueColor: AlwaysStoppedAnimation(Colors.blue),
                           ),
-                          SizedBox(width: 20,),
+                          SizedBox(
+                            width: 20,
+                          ),
                           Text(
                             e,
                             style: TextStyle(
                               color: Colors.grey[800],
                               fontWeight: FontWeight.w500,
-                              fontSize: width/24,
+                              fontSize: width / 24,
                             ),
                           ),
                         ],
@@ -117,26 +195,49 @@ class DialogUtility {
           );
         });
   }
-
-
 }
 
-class ForAnimation extends ChangeNotifier
-{
-  var widthForContainer = 30.0;
-  double getWidthOfContainer() => widthForContainer;
+class GetChanges extends ChangeNotifier {
+  int currentTime = 0;
+  int getUpdatedTime() => currentTime;
+  UserTile userTile;
+  UserTile getUpdatedUserTile() => userTile;
+  List<UserTile> pendingList;
+  List<UserTile> getPendingList() => pendingList;
 
-  changeWidthOfContainer(){
-    widthForContainer = 60;
+  updateTime() {
+    currentTime++;
     notifyListeners();
-    Future.delayed(Duration(seconds: 4),(){
-      shrinkWidth();
+  }
+
+  updateUserTile(UserTile userTile) {
+    this.userTile = userTile;
+    notifyListeners();
+  }
+
+  updatePendingList() async {
+    pendingList = [];
+    await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(await Utility.getContactFromPreference())
+        .collection('PendingList')
+        .get()
+        .then((value) {
+      value.docs.forEach((element) {
+        Map<String, dynamic> map = element.data();
+        pendingList.add(UserTile(
+            buttonText: 'cancel',
+            map: map,
+            notifyChanges: () {
+              print("call a function to delete the request");
+            }));
+      });
     });
-  }
-
-  shrinkWidth(){
-    widthForContainer = 30;
     notifyListeners();
   }
 
+  removeUserTile() {
+    userTile = null;
+    notifyListeners();
+  }
 }
