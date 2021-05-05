@@ -1,8 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ichat/Screens/pages.dart';
+import 'package:ichat/helperCode/helperClasses.dart';
+import 'package:provider/provider.dart';
 
 class CheckPurpose extends StatefulWidget {
   @override
@@ -11,64 +12,63 @@ class CheckPurpose extends StatefulWidget {
 
 class _CheckPurposeState extends State<CheckPurpose> {
   int toggle = 0;
-  Timer timer;
-  final PageController _pageController = PageController(initialPage: 0);
-
   @override
   void initState() {
     super.initState();
-    // timer = Timer.periodic(Duration(seconds: 1), (timer) {
-    //   var timerInfo = Provider.of<GetChanges>(context, listen: false);
-    //   timerInfo.updateTime();
-    // });
   }
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final height = MediaQuery.of(context).size.height;
     return SafeArea(
         child: Scaffold(
-          resizeToAvoidBottomInset: false,
-      bottomSheet: _menu(height),
-      appBar: _appBar(width),
-      backgroundColor: Color(0xFFF2F2F2),
-      body: PageView(
-        controller: _pageController,
-        children: [
-          ChatPage(),
-          ContactPage(
-            pageController: _pageController,
-          ),
-          RequestPage(
-            pageController: _pageController,
-          )
-        ],
-      ),
-    ));
+            resizeToAvoidBottomInset: false,
+            appBar: _appBar(width),
+            backgroundColor: Colors.white,
+            body: Consumer<GetChanges>(
+              builder: (BuildContext context, value, Widget child) {
+                return value.getSemaphoreForMainScreen() == 0
+                    ? ChatPage(close: () {
+                        SystemNavigator.pop(animated: true);
+                      })
+                    : RequestPage(
+                        close: () {
+                          Provider.of<GetChanges>(context, listen: false)
+                              .updateMainSemaphore0();
+                        },
+                      );
+              },
+            )));
   }
 
   _appBar(width) {
     return AppBar(
       elevation: 0,
       automaticallyImplyLeading: false,
-      backgroundColor: Color(0xFFF2F2F2),
-      title: Container(
-        padding: EdgeInsets.all(10),
-        // height: 40,
-        width: width / 2,
-        decoration: BoxDecoration(
-          color: Colors.blue[50],
-          borderRadius: BorderRadius.circular(40),
-        ),
-        child: Align(
-          alignment: Alignment.centerLeft,
-          child: Text(
-            "Good Morning",
-            style: GoogleFonts.muli(
-                fontSize: MediaQuery.of(context).size.width / 20,
-                color: Colors.blue,
-                fontWeight: FontWeight.w600),
+      backgroundColor: Colors.white,
+      centerTitle: true,
+      title: InkWell(
+        onTap: () {
+          Provider.of<GetChanges>(context, listen: false)
+              .updateMainSemaphore1();
+        },
+        child: Container(
+          padding: EdgeInsets.all(10),
+          // height: 40,
+          width: width / 2,
+          decoration: BoxDecoration(
+            color: Colors.blue[50],
+            borderRadius: BorderRadius.circular(40),
+          ),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              "Search iChat",
+              style: GoogleFonts.muli(
+                  fontSize: MediaQuery.of(context).size.width / 20,
+                  color: Colors.blue,
+                  fontWeight: FontWeight.w600),
+            ),
           ),
         ),
       ),
@@ -94,39 +94,4 @@ class _CheckPurposeState extends State<CheckPurpose> {
     );
   }
 
-  _menu(height) {
-    return BottomSheet(
-        onClosing: () {},
-        builder: (context) {
-          return Container(
-            height: 60,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                CircleAvatar(
-                  backgroundColor: Colors.blue[50],
-                  child: Icon(
-                    Icons.chat,
-                    color: Colors.blue,
-                  ),
-                ),
-                CircleAvatar(
-                  backgroundColor: Colors.blue[50],
-                  child: Icon(
-                    Icons.person,
-                    color: Colors.blue,
-                  ),
-                ),
-                CircleAvatar(
-                  backgroundColor: Colors.blue[50],
-                  child: Icon(
-                    Icons.request_quote_outlined,
-                    color: Colors.blue,
-                  ),
-                ),
-              ],
-            ),
-          );
-        });
-  }
 }

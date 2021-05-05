@@ -34,7 +34,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
 
     if (dialogCode != "Loading...") {
-      Future.delayed(Duration(seconds: 2), () {
+      Future.delayed(Duration(seconds: 1), () {
         setState(() {
           toggle = 0;
           _focusNode.requestFocus();
@@ -65,6 +65,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final width = MediaQuery.of(context).size.width;
     return SafeArea(
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         bottomSheet: toggle == 0 ? null : bottomSheet(dialogCode),
         body: Stack(
           children: [
@@ -84,7 +85,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           'imageStr': await Utility.getImageFromPreferences()
                         };
                         _showBottomSheet("Loading...");
-                        FirebaseUtility.addUserToUsers(map, nextPage: ()async{
+                        FirebaseUtility.addUserToUsers(map, nextPage: () async {
                           await Utility.addLoginStatus();
                           Phoenix.rebirth(context);
                         });

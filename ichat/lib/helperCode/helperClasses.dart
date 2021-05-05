@@ -5,6 +5,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:ichat/Models/approveRequestModel.dart';
+import 'package:ichat/Models/contactModel.dart';
+import 'package:ichat/Models/messageModel.dart';
 import 'package:ichat/Models/userModel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -69,6 +73,23 @@ class Utility {
   // _exit the app
   static exitApp(context) {
     SystemNavigator.pop();
+  }
+
+  //UI purpose
+  static getTextStyle(double fontSize, Color color) {
+    return GoogleFonts.muli(
+      fontSize: fontSize,
+      color: color,
+      fontWeight: FontWeight.w700,
+    );
+  }
+
+  static getChatTextStyle(double fontSize, Color color) {
+    return GoogleFonts.muli(
+      fontSize: fontSize,
+      color: color,
+      fontWeight: FontWeight.w600,
+    );
   }
 }
 
@@ -143,6 +164,194 @@ class FirebaseUtility {
         .doc(requester)
         .delete();
   }
+
+  static Future<List<UserTile>> getPendingList(
+      {@required Function update}) async {
+    List<UserTile> pendingList = [];
+    await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(await Utility.getContactFromPreference())
+        .collection('PendingList')
+        .get()
+        .then((value) {
+      value.docs.forEach((element) {
+        Map<String, dynamic> map = element.data();
+        pendingList.add(UserTile(
+            buttonText: 'cancel',
+            map: map,
+            notifyChanges: () async {
+              await FirebaseUtility.cancelRequest(
+                  requested: map['contactNo'],
+                  requester: await Utility.getContactFromPreference());
+              update();
+            }));
+      });
+    });
+    return pendingList;
+  }
+
+  static Future<List<ApproveRequestTile>> getForApprovedList(
+      {@required Function update}) async {
+    List<ApproveRequestTile> approvePendingList = [];
+    await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(await Utility.getContactFromPreference())
+        .collection('ForApproveList')
+        .get()
+        .then((value) {
+      approvePendingList = value.docs
+          .map((e) => ApproveRequestTile(
+                model: ApproveRequestModel.fromMap(e.data()),
+              ))
+          .toList();
+    });
+    return approvePendingList;
+  }
+
+  static addContactToContactList(
+      {@required Map<String, dynamic> requesteeMap,
+      @required Function updateUI}) async {
+    //requestee - who have made the request
+
+    String currentUserContact = await Utility.getContactFromPreference();
+    DocumentReference sharedDoucment =
+        FirebaseFirestore.instance.collection('Chats').doc();
+    DocumentReference documentReference2,
+        documentReference = FirebaseFirestore.instance
+            .collection('Users')
+            .doc(currentUserContact);
+
+    documentReference2 = FirebaseFirestore.instance
+        .collection('Users')
+        .doc(requesteeMap['contactNo']);
+
+    //updateing user's contact list
+    await documentReference
+        .collection('Contacts')
+        .doc(requesteeMap['contactNo'])
+        .set(await documentReference2.get().then((value) => value.data()));
+    await documentReference
+        .collection('Contacts')
+        .doc(requesteeMap['contactNo'])
+        .update({'sharedDoucment': sharedDoucment.id, 'alignmentSemaphore': 0});
+
+    //updating user's ForApproveList by deleting the requester
+    await documentReference
+        .collection('ForApproveList')
+        .doc(requesteeMap['contactNo'])
+        .delete();
+
+    //requestee collection
+
+    //requested deleted from the requester's pendinglist
+    await documentReference2
+        .collection('PendingList')
+        .doc(currentUserContact)
+        .delete();
+    await documentReference2
+        .collection('Contacts')
+        .doc(currentUserContact)
+        .set(await documentReference.get().then((value) => value.data()));
+    await documentReference2
+        .collection('Contacts')
+        .doc(currentUserContact)
+        .update({'sharedDoucment': sharedDoucment.id, 'alignmentSemaphore': 1});
+
+    await sharedDoucment.set({'activeStatus': false});
+    updateUI();
+  }
+
+  static removeFromContactList(
+      {@required String requester, @required Function updateUI}) async {
+    String currentUserContact = await Utility.getContactFromPreference();
+    DocumentReference documentReference2,
+        documentReference = FirebaseFirestore.instance
+            .collection('Users')
+            .doc(currentUserContact);
+
+    documentReference2 =
+        FirebaseFirestore.instance.collection('Users').doc(requester);
+
+    await documentReference
+        .collection('ForApproveList')
+        .doc(requester) //requester - number of person who have made the request
+        .delete();
+
+    //requestee collection
+
+    //requested deleted from the requester's pendinglist
+    await documentReference2
+        .collection('PendingList')
+        .doc(currentUserContact)
+        .delete();
+
+    updateUI();
+  }
+
+  static Future<List<ContactTile>> getContactList(
+      {@required Function update}) async {
+    List<ContactTile> contactList = [];
+    await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(await Utility.getContactFromPreference())
+        .collection('Contacts')
+        .get()
+        .then((value) {
+      contactList = value.docs
+          .map((e) => ContactTile(
+                model: ContactModel.fromMap(e.data()),
+              ))
+          .toList();
+      update();
+    });
+    return contactList;
+  }
+
+  static doMessage(
+      {@required Map<String, dynamic> message,
+      @required String sharedDoucment}) async {
+    DocumentReference documentReference =
+        FirebaseFirestore.instance.collection('Chats').doc(sharedDoucment);
+    await documentReference.get().then((value) async {
+      if (value.data()['activeStatus'] == false) {
+        await addContactToActivatedList(
+            otherPersonContact: message['contactNo']);
+        await documentReference
+            .update({message['timeStamp'].toString(): message});
+        await documentReference.update({'activeStatus': true});
+      } else {
+        documentReference.update({message['timeStamp'].toString(): message});
+      }
+    });
+  }
+
+  static addContactToActivatedList({@required otherPersonContact}) async {
+    String currentUserContact = await Utility.getContactFromPreference();
+
+    DocumentReference otherUserDoc,
+        currentUserDoc = FirebaseFirestore.instance
+            .collection('Users')
+            .doc(currentUserContact);
+    await currentUserDoc
+        .collection('ActivatedContacts')
+        .doc(otherPersonContact)
+        .set(await currentUserDoc
+            .collection('Contacts')
+            .doc(otherPersonContact)
+            .get()
+            .then((value) => value.data()));
+
+    otherUserDoc =
+        FirebaseFirestore.instance.collection('Users').doc(otherPersonContact);
+    await otherUserDoc
+        .collection('ActivatedContacts')
+        .doc(currentUserContact)
+        .set(await otherUserDoc
+            .collection('Contacts')
+            .doc(currentUserContact)
+            .get()
+            .then((value) => value.data()));
+  }
 }
 
 class DialogUtility {
@@ -198,12 +407,24 @@ class DialogUtility {
 }
 
 class GetChanges extends ChangeNotifier {
+  int semaphoreForMainScreen = 0;
+  int getSemaphoreForMainScreen() => semaphoreForMainScreen;
   int currentTime = 0;
   int getUpdatedTime() => currentTime;
   UserTile userTile;
   UserTile getUpdatedUserTile() => userTile;
-  List<UserTile> pendingList;
-  List<UserTile> getPendingList() => pendingList;
+  String btnText = 'request';
+  String getbtnText() => btnText;
+
+  updateMainSemaphore0() {
+    semaphoreForMainScreen = 0;
+    notifyListeners();
+  }
+
+  updateMainSemaphore1() {
+    semaphoreForMainScreen = 1;
+    notifyListeners();
+  }
 
   updateTime() {
     currentTime++;
@@ -215,29 +436,90 @@ class GetChanges extends ChangeNotifier {
     notifyListeners();
   }
 
-  updatePendingList() async {
-    pendingList = [];
-    await FirebaseFirestore.instance
-        .collection('Users')
-        .doc(await Utility.getContactFromPreference())
-        .collection('PendingList')
-        .get()
-        .then((value) {
-      value.docs.forEach((element) {
-        Map<String, dynamic> map = element.data();
-        pendingList.add(UserTile(
-            buttonText: 'cancel',
-            map: map,
-            notifyChanges: () {
-              print("call a function to delete the request");
-            }));
-      });
-    });
-    notifyListeners();
-  }
-
   removeUserTile() {
     userTile = null;
     notifyListeners();
+  }
+
+  updateBtnText() {
+    btnText = 'request...';
+    notifyListeners();
+  }
+
+  setBtnText() {
+    btnText = 'request';
+    notifyListeners();
+  }
+}
+
+class KeyBoard extends StatelessWidget {
+  final TextEditingController _controller = TextEditingController();
+  final ContactModel contactModel;
+
+  KeyBoard({this.contactModel});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+      color: Colors.white,
+      height: 100,
+      width: MediaQuery.of(context).size.width,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Container(
+              height: 46.0,
+              padding: EdgeInsets.only(left: 20, right: 20),
+              margin: EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  color: Color(0xFFF2F2F7)),
+              child: TextField(
+                controller: _controller,
+                style: Utility.getTextStyle(18, Colors.grey[600]),
+                textAlign: TextAlign.start,
+                keyboardType: TextInputType.multiline,
+                cursorColor: Colors.black,
+                maxLines: 5,
+                decoration: InputDecoration(
+                    border: UnderlineInputBorder(
+                      borderSide: BorderSide.none,
+                    ),
+                    hintText: 'Text message',
+                    hintStyle: Utility.getTextStyle(18, Colors.grey[600])),
+                onChanged: (_) {},
+              ),
+            ),
+          ),
+          InkWell(
+            onTap: () async {
+              // send message to firebase
+              await FirebaseUtility.doMessage(
+                  message: Message(
+                          messageBody: _controller.text.trim(),
+                          createdAt: Timestamp.now(),
+                          contactNo: contactModel.contactNo,
+                          alignmentSemaphore: contactModel.alignmentSemaphore,
+                          timeStamp: Timestamp.now())
+                      .toJson(),
+                  sharedDoucment: contactModel.sharedDoucment);
+              _controller.clear();
+            },
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 8.0, vertical: 14.0),
+              child: CircleAvatar(
+                  backgroundColor: Color(0xFFF2F2F7),
+                  child: Icon(
+                    Icons.arrow_upward,
+                    color: Colors.grey[400],
+                  )),
+            ),
+          )
+        ],
+      ),
+    );
   }
 }

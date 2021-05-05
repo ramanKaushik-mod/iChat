@@ -15,6 +15,7 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   FocusNode _focusNode;
   String vefiId = "";
+  bool enter = true;
 
   int toggle = 0;
   String _phoneNumber = "", smsCode = '', dialogCode;
@@ -33,10 +34,13 @@ class _AuthScreenState extends State<AuthScreen> {
           // ANDROID ONLY!
 
           // Sign the user in (or link) with the auto-generated credential
+          setState(() {
+            enter = false;
+          });
           await auth.signInWithCredential(credential);
 
           if (FirebaseAuth.instance.currentUser != null) {
-            await Utility.addLoginStatus();
+            await Utility.addContactToPreference(contact: _phoneNumber);
             Navigator.of(context).pushReplacement(
                 MaterialPageRoute(builder: (context) => ProfileScreen()));
           }
@@ -114,13 +118,13 @@ class _AuthScreenState extends State<AuthScreen> {
 
     if (dialogCode != "Loading...") {
       if (dialogCode[0] == "d") {
-        Future.delayed(Duration(seconds: 32), () {
+        Future.delayed(Duration(seconds: 1), () {
           setState(() {
             toggle = 0;
           });
         });
       } else if (dialogCode[0] != "W") {
-        Future.delayed(Duration(seconds: 2), () {
+        Future.delayed(Duration(seconds: 1), () {
           setState(() {
             toggle = 0;
             _focusNode.requestFocus();
@@ -388,6 +392,9 @@ class _AuthScreenState extends State<AuthScreen> {
           timerCount -= 1;
         });
       });
+      if (enter == false) {
+        break;
+      }
     }
   }
 

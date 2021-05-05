@@ -1,73 +1,251 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:ichat/Models/contactModel.dart';
 import 'package:ichat/Models/userModel.dart';
 import 'package:ichat/helperCode/helperClasses.dart';
 import 'package:provider/provider.dart';
 
-class ChatPage extends StatelessWidget {
+class ChatPage extends StatefulWidget {
+  final Function close;
+  ChatPage({@required this.close});
+
+  @override
+  _ChatPageState createState() => _ChatPageState();
+}
+
+class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
+    final height = MediaQuery.of(context).size.height;
+    final width = MediaQuery.of(context).size.width;
     return WillPopScope(
       onWillPop: () {
-        Utility.exitApp(context);
-        return Future.value(false);
+        widget.close();
+        return Future.value(true);
       },
-      child: Container(
-        child: Center(
-          child: Text('Chat Page'),
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: Container(
+          margin: EdgeInsets.symmetric(horizontal: 10),
+          height: height,
+          width: width,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                  child: Text(
+                    'Contacts',
+                    style: Utility.getTextStyle(30, Colors.grey[500]),
+                  ),
+                ),
+              ),
+              Divider(
+                height: 10,
+                color: Colors.black,
+              ),
+              Expanded(
+                child: FutureBuilder<List<ContactTile>>(
+                  future: FirebaseUtility.getContactList(update: () {}),
+                  builder: (BuildContext context, AsyncSnapshot snapshot) {
+                    if (snapshot.hasData) {
+                      List<ContactTile> list = snapshot.data;
+
+                      return list.isNotEmpty
+                          ? SingleChildScrollView(
+                              scrollDirection: Axis.vertical,
+                              physics: BouncingScrollPhysics(),
+                              child: Column(
+                                children: snapshot.data,
+                              ),
+                            )
+                          : Center(
+                              child: Icon(
+                                Icons.error,
+                                size: 100,
+                                color: Color(0xFFF2F2F7),
+                              ),
+                            );
+                    }
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Text("Something Went Wrong"),
+                      );
+                    }
+                    return Center(
+                      child: Text('Loading...'),
+                    );
+                  },
+                ),
+              ),
+              SizedBox(
+                height: 40,
+              )
+            ],
+          ),
+        ),
+        floatingActionButton: TextButton(
+          onPressed: () {
+            Navigator.pushNamed(context, '/contactScreen');
+          },
+          style: TextButton.styleFrom(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30)),
+              backgroundColor: Color(0xFFF2F2F7),
+              textStyle:
+                  GoogleFonts.muli(fontSize: 20, fontWeight: FontWeight.w600)),
+          child: Wrap(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(
+                    top: 8.0, bottom: 6, left: 10, right: 5),
+                child: Icon(
+                  Icons.message,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text('message'),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class ContactPage extends StatelessWidget {
-  final PageController pageController;
+class ContactPage extends StatefulWidget {
+  @override
+  _ContactPageState createState() => _ContactPageState();
+}
 
-  ContactPage({this.pageController});
-
+class _ContactPageState extends State<ContactPage> {
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () {
-        pageController.jumpToPage(0);
-        return Future.value(false);
-      },
-      child: Container(
-        child: Center(
-          child: Text('Contact Page'),
+    final height = MediaQuery.of(context).size.height;
+    final width = MediaQuery.of(context).size.width;
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            icon: Icon(Icons.arrow_back_ios, color: Colors.grey[600])),
+        elevation: 0,
+        backgroundColor: Colors.white,
+      ),
+      body: Container(
+        margin: EdgeInsets.symmetric(horizontal: 10),
+        height: height,
+        width: width,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                child: Text(
+                  'Contacts',
+                  style: getTextStyle(),
+                ),
+              ),
+            ),
+            Divider(
+              height: 10,
+              color: Colors.black,
+            ),
+            Expanded(
+              child: FutureBuilder<List<ContactTile>>(
+                future: FirebaseUtility.getContactList(update: () {}),
+                builder: (BuildContext context, AsyncSnapshot snapshot) {
+                  if (snapshot.hasData) {
+                    List<ContactTile> list = snapshot.data;
+
+                    return list.isNotEmpty
+                        ? SingleChildScrollView(
+                            scrollDirection: Axis.vertical,
+                            physics: BouncingScrollPhysics(),
+                            child: Column(
+                              children: snapshot.data,
+                            ),
+                          )
+                        : Center(
+                            child: Icon(
+                              Icons.error,
+                              size: 100,
+                              color: Color(0xFFF2F2F7),
+                            ),
+                          );
+                  }
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text("Something Went Wrong"),
+                    );
+                  }
+                  return Center(
+                    child: Text('Loading...'),
+                  );
+                },
+              ),
+            ),
+            SizedBox(
+              height: 40,
+            )
+          ],
         ),
       ),
     );
+  }
+
+  getTextStyle() {
+    return GoogleFonts.muli(
+        fontSize: 30, fontWeight: FontWeight.w600, color: Colors.grey[500]);
   }
 }
 
 class RequestPage extends StatefulWidget {
-  final PageController pageController;
-  TextEditingController _controller = TextEditingController();
-
-  RequestPage({this.pageController});
-
+  final Function close;
+  RequestPage({@required this.close});
   @override
   _RequestPageState createState() => _RequestPageState();
 }
 
 class _RequestPageState extends State<RequestPage> {
   UserTile _userTile;
+  final TextEditingController _controller = TextEditingController();
+  FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode();
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Provider.of<GetChanges>(context, listen: false).updatePendingList();
-    // final height = MediaQuery.of(context).size.height;
-    final width = MediaQuery.of(context).size.width;
     return WillPopScope(
       onWillPop: () {
-        widget.pageController.jumpToPage(0);
+        widget.close();
         return Future.value(false);
       },
       child: Stack(
         children: [
-          Center(child: Icon(Icons.verified_user_rounded, color: Colors.white,size: 100,),),
+          Center(
+            child: Icon(
+              Icons.verified_user_rounded,
+              color: Colors.white,
+              size: 100,
+            ),
+          ),
           Container(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -77,7 +255,8 @@ class _RequestPageState extends State<RequestPage> {
                   margin: EdgeInsets.all(10),
                   height: 180,
                   decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20), color: Colors.white),
+                      borderRadius: BorderRadius.circular(20),
+                      color: Colors.white),
                   child: Column(
                     children: [
                       Row(
@@ -91,18 +270,19 @@ class _RequestPageState extends State<RequestPage> {
                                   borderRadius: BorderRadius.circular(20),
                                   color: Color(0xFFF2F2F2)),
                               child: TextField(
-                                controller: widget._controller,
+                                controller: _controller,
                                 style: getTextStyle(),
                                 textAlign: TextAlign.start,
-                                keyboardType: TextInputType.visiblePassword,
+                                keyboardType: TextInputType.number,
                                 cursorColor: Colors.blue,
+                                focusNode: _focusNode,
                                 decoration: InputDecoration(
-                                    // suffixIcon:
                                     border: UnderlineInputBorder(
                                       borderSide: BorderSide.none,
                                     ),
                                     hintText: 'Search Here',
                                     hintStyle: getTextStyle()),
+                                onChanged: (_) {},
                               ),
                             ),
                           ),
@@ -111,37 +291,45 @@ class _RequestPageState extends State<RequestPage> {
                             child: IconButton(
                               color: Colors.grey[600],
                               onPressed: () async {
-                                var contactNo = widget._controller.text.trim();
+                                setState(() {
+                                  _focusNode.unfocus();
+                                });
+                                var contactNo = _controller.text.trim();
                                 if (contactNo.length != 10) {
                                   print("length is not apropriate");
                                 } else {
                                   for (var item in contactNo.split("")) {
                                     if (!item.contains(RegExp(r'[0-9]'))) {
-                                      widget._controller.clear();
+                                      _controller.clear();
                                     }
                                   }
                                 }
 
-                                if (widget._controller.text.trim().length == 10) {
+                                if (_controller.text.trim().length == 10) {
                                   //check that number exists or not
                                   //if exists, turn it into a UserTile object
                                   Map<String, dynamic> map =
                                       await FirebaseUtility.findUser(
                                           contactNumber: '+91$contactNo');
 
-                                  if (map.isNotEmpty) {
+                                  if (map != null && map.isNotEmpty) {
                                     var getChanges = Provider.of<GetChanges>(
                                         context,
                                         listen: false);
                                     _userTile = UserTile(
-                                        buttonText: 'Request',
+                                        buttonText: 'request',
                                         map: map,
                                         notifyChanges: () async {
                                           getChanges.removeUserTile();
-                                          getChanges.updatePendingList();
                                         });
 
                                     getChanges.updateUserTile(_userTile);
+                                  } else {
+                                    _controller.text =
+                                        '${_controller.text.trim()} not exists';
+                                    Timer(Duration(seconds: 1), () {
+                                      _controller.text = '';
+                                    });
                                   }
                                 }
                               },
@@ -168,30 +356,15 @@ class _RequestPageState extends State<RequestPage> {
                     ],
                   ),
                 ),
-                // Container(
-                //   height: MediaQuery.of(context).size.height / 2,
-                //   width: width,
-                //   // color: Colors.blue,
-                //   child: SingleChildScrollView(
-                //       scrollDirection: Axis.vertical,
-                //       child: Consumer<GetChanges>(
-                //         builder: (BuildContext context, value, Widget child) {
-                //           return value.pendingList == null ||
-                //                   value.pendingList.isEmpty
-                //               ? Center(child: Text('No requests'))
-                //               : Column(
-                //                   children: value.pendingList,
-                //                 );
-                //         },
-                //       )),
-                // ),
                 Container(
                   margin: EdgeInsets.all(20),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/pendingScreen');
+                        },
                         style: ElevatedButton.styleFrom(
                             primary: Colors.white,
                             textStyle: getTextStyle(),
@@ -203,7 +376,9 @@ class _RequestPageState extends State<RequestPage> {
                         ),
                       ),
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/requestScreen');
+                        },
                         style: ElevatedButton.styleFrom(
                             primary: Colors.white,
                             textStyle: getTextStyle(),
