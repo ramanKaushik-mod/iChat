@@ -29,6 +29,7 @@ class ApproveRequestTile extends StatefulWidget {
 }
 
 class _ApproveRequestTileState extends State<ApproveRequestTile> {
+  String add = 'Adding', remove = 'Removing';
   @override
   Widget build(BuildContext context) {
     return InkWell(

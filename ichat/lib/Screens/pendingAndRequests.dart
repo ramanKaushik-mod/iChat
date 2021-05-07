@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:ichat/Models/approveRequestModel.dart';
-import 'package:ichat/Models/userModel.dart';
+import 'package:ichat/models/approveRequestModel.dart';
+import 'package:ichat/models/userModel.dart';
 import 'package:ichat/helperCode/helperClasses.dart';
 
 class PendingScreen extends StatefulWidget {

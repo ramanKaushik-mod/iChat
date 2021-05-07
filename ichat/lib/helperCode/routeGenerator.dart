@@ -5,6 +5,7 @@ import 'package:ichat/Screens/logoScreen.dart';
 import 'package:ichat/Screens/messageScreen.dart';
 import 'package:ichat/Screens/pages.dart';
 import 'package:ichat/Screens/pendingAndRequests.dart';
+import 'package:ichat/Screens/userProfile.dart';
 
 class RouteGenerator {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -25,7 +26,10 @@ class RouteGenerator {
       case '/contactScreen':
         return MaterialPageRoute(builder: (_) => ContactPage());
       case '/messageScreen':
-        return MaterialPageRoute(builder: (_) => MessageScreen(contactModel:args));
+        return MaterialPageRoute(
+            builder: (_) => MessageScreen(contactModel: args));
+      case '/userScreen':
+        return MaterialPageRoute(builder: (_) => UserProfile(model: args,));
       default:
         return _errorRoute();
     }

@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -47,6 +48,19 @@ class _CheckPurposeState extends State<CheckPurpose> {
       automaticallyImplyLeading: false,
       backgroundColor: Colors.white,
       centerTitle: true,
+      leading: InkWell(
+        onTap: () async {
+          FirebaseUtility.logout();
+          SystemNavigator.pop();
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10.0),
+          child: CircleAvatar(
+            backgroundColor: Colors.blue[50],
+            child: Icon(Icons.exit_to_app),
+          ),
+        ),
+      ),
       title: InkWell(
         onTap: () {
           Provider.of<GetChanges>(context, listen: false)
@@ -83,15 +97,20 @@ class _CheckPurposeState extends State<CheckPurpose> {
                 color: Colors.blue[50],
               )),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10.0),
-          child: CircleAvatar(
-            backgroundColor: Colors.blue[50],
-            child: Icon(Icons.person),
+        InkWell(
+          onTap: () async {
+            Navigator.pushNamed(context, '/userScreen',
+                arguments: await FirebaseUtility.getUserDetails());
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10.0),
+            child: CircleAvatar(
+              backgroundColor: Colors.blue[50],
+              child: Icon(Icons.person),
+            ),
           ),
         ),
       ],
     );
   }
-
 }

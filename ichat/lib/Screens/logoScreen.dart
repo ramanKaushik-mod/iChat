@@ -33,12 +33,6 @@ class _LogoScreenState extends State<LogoScreen> {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/checkPurpose');
-        },
-        child: Icon(Icons.arrow_forward_ios),
-      ),
       body: Container(
         width: width,
         child: Column(

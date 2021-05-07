@@ -6,16 +6,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:ichat/Models/approveRequestModel.dart';
-import 'package:ichat/Models/contactModel.dart';
-import 'package:ichat/Models/messageModel.dart';
-import 'package:ichat/Models/userModel.dart';
+import 'package:ichat/models/approveRequestModel.dart';
+import 'package:ichat/models/contactModel.dart';
+import 'package:ichat/models/userModel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final String loginStatusKey = "LOGIN_STATUS_KEY";
 final String userName = "USER_NAME";
 final String imgKey = 'IMAGE_KEY';
 final String contactNo = 'CONTACT_NUMBER';
+final String lastMessage = 'LAST_MESSAGE';
 
 class Utility {
   static SharedPreferences _preferences;
@@ -70,6 +70,16 @@ class Utility {
     return _preferences.get(contactNo);
   }
 
+  static setLastMessage(String message) async {
+    await SharedPreferences.getInstance()
+        .then((value) => value.setString(lastMessage, message));
+  }
+
+  static getLastMessage() async {
+    _preferences = await SharedPreferences.getInstance();
+    return _preferences.get(lastMessage);
+  }
+
   // _exit the app
   static exitApp(context) {
     SystemNavigator.pop();
@@ -96,6 +106,7 @@ class Utility {
 class FirebaseUtility {
   static logout() async {
     await FirebaseAuth.instance.signOut();
+    await Utility.clearPreferences();
   }
 
   static addUserToUsers(Map<String, dynamic> data, {Function nextPage}) async {
@@ -316,11 +327,10 @@ class FirebaseUtility {
       if (value.data()['activeStatus'] == false) {
         await addContactToActivatedList(
             otherPersonContact: message['contactNo']);
-        await documentReference
-            .update({message['timeStamp'].toString(): message});
+        await documentReference.collection('messages').doc().set(message);
         await documentReference.update({'activeStatus': true});
       } else {
-        documentReference.update({message['timeStamp'].toString(): message});
+        await documentReference.collection('messages').doc().set(message);
       }
     });
   }
@@ -351,6 +361,14 @@ class FirebaseUtility {
             .doc(currentUserContact)
             .get()
             .then((value) => value.data()));
+  }
+
+  static Future<ContactModel> getUserDetails() async {
+    return await FirebaseFirestore.instance
+        .collection('Users')
+        .doc(await Utility.getContactFromPreference())
+        .get()
+        .then((value) => ContactModel.fromMap(value.data()));
   }
 }
 
@@ -436,6 +454,11 @@ class GetChanges extends ChangeNotifier {
     notifyListeners();
   }
 
+  turnUserTileToNull() {
+    userTile = null;
+    notifyListeners();
+  }
+
   removeUserTile() {
     userTile = null;
     notifyListeners();
@@ -449,77 +472,5 @@ class GetChanges extends ChangeNotifier {
   setBtnText() {
     btnText = 'request';
     notifyListeners();
-  }
-}
-
-class KeyBoard extends StatelessWidget {
-  final TextEditingController _controller = TextEditingController();
-  final ContactModel contactModel;
-
-  KeyBoard({this.contactModel});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-      color: Colors.white,
-      height: 100,
-      width: MediaQuery.of(context).size.width,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Container(
-              height: 46.0,
-              padding: EdgeInsets.only(left: 20, right: 20),
-              margin: EdgeInsets.all(5),
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  color: Color(0xFFF2F2F7)),
-              child: TextField(
-                controller: _controller,
-                style: Utility.getTextStyle(18, Colors.grey[600]),
-                textAlign: TextAlign.start,
-                keyboardType: TextInputType.multiline,
-                cursorColor: Colors.black,
-                maxLines: 5,
-                decoration: InputDecoration(
-                    border: UnderlineInputBorder(
-                      borderSide: BorderSide.none,
-                    ),
-                    hintText: 'Text message',
-                    hintStyle: Utility.getTextStyle(18, Colors.grey[600])),
-                onChanged: (_) {},
-              ),
-            ),
-          ),
-          InkWell(
-            onTap: () async {
-              // send message to firebase
-              await FirebaseUtility.doMessage(
-                  message: Message(
-                          messageBody: _controller.text.trim(),
-                          createdAt: Timestamp.now(),
-                          contactNo: contactModel.contactNo,
-                          alignmentSemaphore: contactModel.alignmentSemaphore,
-                          timeStamp: Timestamp.now())
-                      .toJson(),
-                  sharedDoucment: contactModel.sharedDoucment);
-              _controller.clear();
-            },
-            child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8.0, vertical: 14.0),
-              child: CircleAvatar(
-                  backgroundColor: Color(0xFFF2F2F7),
-                  child: Icon(
-                    Icons.arrow_upward,
-                    color: Colors.grey[400],
-                  )),
-            ),
-          )
-        ],
-      ),
-    );
   }
 }

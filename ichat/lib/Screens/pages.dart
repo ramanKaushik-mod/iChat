@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:ichat/Models/contactModel.dart';
-import 'package:ichat/Models/userModel.dart';
+import 'package:ichat/models/contactModel.dart';
+import 'package:ichat/models/userModel.dart';
 import 'package:ichat/helperCode/helperClasses.dart';
 import 'package:provider/provider.dart';
 
@@ -28,26 +28,12 @@ class _ChatPageState extends State<ChatPage> {
       child: Scaffold(
         backgroundColor: Colors.white,
         body: Container(
-          margin: EdgeInsets.symmetric(horizontal: 10),
           height: height,
           width: width,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-                  child: Text(
-                    'Contacts',
-                    style: Utility.getTextStyle(30, Colors.grey[500]),
-                  ),
-                ),
-              ),
-              Divider(
-                height: 10,
-                color: Colors.black,
-              ),
+              SizedBox(height: 20,),
               Expanded(
                 child: FutureBuilder<List<ContactTile>>(
                   future: FirebaseUtility.getContactList(update: () {}),
@@ -73,11 +59,11 @@ class _ChatPageState extends State<ChatPage> {
                     }
                     if (snapshot.hasError) {
                       return Center(
-                        child: Text("Something Went Wrong"),
+                        child: Text("Something Went Wrong", style: Utility.getTextStyle(20, Color(0xFFF2F2F7)),),
                       );
                     }
                     return Center(
-                      child: Text('Loading...'),
+                      child: Text('Loading...', style: Utility.getTextStyle(20, Color(0xFFF2F2F7))),
                     );
                   },
                 ),
@@ -143,7 +129,7 @@ class _ContactPageState extends State<ContactPage> {
         backgroundColor: Colors.white,
       ),
       body: Container(
-        margin: EdgeInsets.symmetric(horizontal: 10),
+        margin: EdgeInsets.symmetric(vertical: 2),
         height: height,
         width: width,
         child: Column(
@@ -235,6 +221,7 @@ class _RequestPageState extends State<RequestPage> {
     return WillPopScope(
       onWillPop: () {
         widget.close();
+        Provider.of<GetChanges>(context, listen: false).turnUserTileToNull();
         return Future.value(false);
       },
       child: Stack(
@@ -242,7 +229,7 @@ class _RequestPageState extends State<RequestPage> {
           Center(
             child: Icon(
               Icons.verified_user_rounded,
-              color: Colors.white,
+              color: Color(0xFFF2F2F7),
               size: 100,
             ),
           ),
@@ -256,7 +243,7 @@ class _RequestPageState extends State<RequestPage> {
                   height: 180,
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
-                      color: Colors.white),
+                      color: Color(0xFFF2F2F7)),
                   child: Column(
                     children: [
                       Row(
@@ -267,8 +254,9 @@ class _RequestPageState extends State<RequestPage> {
                               padding: EdgeInsets.only(left: 20),
                               margin: EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(20),
-                                  color: Color(0xFFF2F2F2)),
+                                borderRadius: BorderRadius.circular(20),
+                                color: Colors.white,
+                              ),
                               child: TextField(
                                 controller: _controller,
                                 style: getTextStyle(),
@@ -286,56 +274,64 @@ class _RequestPageState extends State<RequestPage> {
                               ),
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 10),
-                            child: IconButton(
-                              color: Colors.grey[600],
-                              onPressed: () async {
-                                setState(() {
-                                  _focusNode.unfocus();
-                                });
-                                var contactNo = _controller.text.trim();
-                                if (contactNo.length != 10) {
-                                  print("length is not apropriate");
+                          IconButton(
+                            color: Colors.grey[600],
+                            onPressed: () async {
+                              setState(() {
+                                _focusNode.unfocus();
+                              });
+                              var contactNo = _controller.text.trim();
+                              if (contactNo.length != 10) {
+                                print("length is not apropriate");
+                              } else {
+                                for (var item in contactNo.split("")) {
+                                  if (!item.contains(RegExp(r'[0-9]'))) {
+                                    _controller.clear();
+                                  }
+                                }
+                              }
+
+                              if (_controller.text.trim().length == 10) {
+                                //check that number exists or not
+                                //if exists, turn it into a UserTile object
+                                Map<String, dynamic> map =
+                                    await FirebaseUtility.findUser(
+                                        contactNumber: '+91$contactNo');
+
+                                if (map != null && map.isNotEmpty) {
+                                  var getChanges = Provider.of<GetChanges>(
+                                      context,
+                                      listen: false);
+                                  _userTile = UserTile(
+                                      buttonText: 'request',
+                                      map: map,
+                                      notifyChanges: () async {
+                                        getChanges.removeUserTile();
+                                      });
+
+                                  getChanges.updateUserTile(_userTile);
                                 } else {
-                                  for (var item in contactNo.split("")) {
-                                    if (!item.contains(RegExp(r'[0-9]'))) {
-                                      _controller.clear();
-                                    }
-                                  }
+                                  _controller.text =
+                                      '${_controller.text.trim()} not exists';
+                                  Timer(Duration(seconds: 1), () {
+                                    _controller.text = '';
+                                  });
                                 }
-
-                                if (_controller.text.trim().length == 10) {
-                                  //check that number exists or not
-                                  //if exists, turn it into a UserTile object
-                                  Map<String, dynamic> map =
-                                      await FirebaseUtility.findUser(
-                                          contactNumber: '+91$contactNo');
-
-                                  if (map != null && map.isNotEmpty) {
-                                    var getChanges = Provider.of<GetChanges>(
-                                        context,
-                                        listen: false);
-                                    _userTile = UserTile(
-                                        buttonText: 'request',
-                                        map: map,
-                                        notifyChanges: () async {
-                                          getChanges.removeUserTile();
-                                        });
-
-                                    getChanges.updateUserTile(_userTile);
-                                  } else {
-                                    _controller.text =
-                                        '${_controller.text.trim()} not exists';
-                                    Timer(Duration(seconds: 1), () {
-                                      _controller.text = '';
-                                    });
-                                  }
-                                }
-                              },
-                              icon: Icon(Icons.search),
-                            ),
+                              }
+                            },
+                            icon: Icon(Icons.search),
                           ),
+                          Padding(
+                            padding: EdgeInsets.only(right:8),
+                            child: IconButton(
+                                                            color: Colors.grey[600],
+                              onPressed: () {
+                                Provider.of<GetChanges>(context, listen: false)
+                                    .turnUserTileToNull();
+                              },
+                              icon: Icon(Icons.clear),
+                            ),
+                          )
                         ],
                       ),
                       Expanded(
@@ -366,13 +362,13 @@ class _RequestPageState extends State<RequestPage> {
                           Navigator.pushNamed(context, '/pendingScreen');
                         },
                         style: ElevatedButton.styleFrom(
-                            primary: Colors.white,
+                            primary: Color(0xFFF2F2F7),
                             textStyle: getTextStyle(),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20))),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                          child: Text('Pendings'),
+                          child: Text('Request Queue'),
                         ),
                       ),
                       TextButton(
@@ -380,13 +376,13 @@ class _RequestPageState extends State<RequestPage> {
                           Navigator.pushNamed(context, '/requestScreen');
                         },
                         style: ElevatedButton.styleFrom(
-                            primary: Colors.white,
+                            primary: Color(0xFFF2F2F7),
                             textStyle: getTextStyle(),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20))),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                          child: Text('Requests'),
+                          child: Text('Pending Queue'),
                         ),
                       ),
                       SizedBox(height: 80),

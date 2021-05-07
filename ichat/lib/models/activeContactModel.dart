@@ -4,7 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:ichat/helperCode/helperClasses.dart';
 
-class ContactModel {
+class ActiveContactModel {
   final String imageStr;
   final String name;
   final String contactNo;
@@ -13,7 +13,7 @@ class ContactModel {
   final String sharedDoucment;
   final int alignmentSemaphore;
 
-  ContactModel(
+  ActiveContactModel(
       {this.imageStr,
       this.name = '',
       this.contactNo = '',
@@ -22,7 +22,7 @@ class ContactModel {
       this.sharedDoucment,
       this.alignmentSemaphore});
 
-  ContactModel.fromMap(Map<String, dynamic> map)
+  ActiveContactModel.fromMap(Map<String, dynamic> map)
       : imageStr = map['imageStr'],
         name = map['name'],
         contactNo = map['contactNo'],
@@ -42,15 +42,16 @@ class ContactModel {
       };
 }
 
-class ContactTile extends StatefulWidget {
-  final ContactModel model;
-  ContactTile({@required this.model});
+class ActiveContactTile extends StatefulWidget {
+  final ActiveContactModel model;
+  
+  ActiveContactTile({this.model});
 
   @override
-  _ContactTileState createState() => _ContactTileState();
+  _ActiveContactTileState createState() => _ActiveContactTileState();
 }
 
-class _ContactTileState extends State<ContactTile> {
+class _ActiveContactTileState extends State<ActiveContactTile> {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -59,9 +60,7 @@ class _ContactTileState extends State<ContactTile> {
         Navigator.pushNamed(context, '/messageScreen', arguments: widget.model);
       },
       child: Container(
-                  color: Color(0xFFF2F2F7),
-                  margin: EdgeInsets.symmetric(vertical: 2),
-
+        color: Color(0xFFF2F2F7),
         height: 80,
         width: width,
         child: Row(
@@ -103,17 +102,17 @@ class _ContactTileState extends State<ContactTile> {
                             overflow: TextOverflow.ellipsis,
                             text: TextSpan(
                                 text: widget.model.name,
-                                style:
-                                    Utility.getTextStyle(16, Colors.blue)))),
-                  //  SizedBox(height: 10,),
-                  //   Flexible(
-                  //       child: RichText(
-                  //           maxLines: 1,
-                  //           overflow: TextOverflow.clip,
-                  //           text: TextSpan(
-                  //               text: widget.model.contactStatus,
-                  //               style:
-                  //                   Utility.getTextStyle(12, Colors.blue)))),
+                                style: Utility.getTextStyle(16, Colors.blue)))),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    Flexible(
+                        child: RichText(
+                            maxLines: 1,
+                            overflow: TextOverflow.clip,
+                            text: TextSpan(
+                                text: widget.model.contactStatus,
+                                style: Utility.getTextStyle(12, Colors.blue)))),
                   ],
                 ),
               ),

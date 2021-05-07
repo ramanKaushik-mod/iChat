@@ -7,21 +7,21 @@ class Message {
   final Timestamp createdAt;
   final String contactNo;
   final int alignmentSemaphore;
-  final Timestamp timeStamp;
+  final String sentTime;
 
   Message(
       {this.messageBody,
       this.createdAt,
       this.contactNo,
       this.alignmentSemaphore,
-      this.timeStamp});
+      this.sentTime});
 
   Map<String, dynamic> toJson() => {
         'messageBody': messageBody,
         'createdAt': createdAt,
         'contactNo': contactNo,
         'alignmentSemaphore': alignmentSemaphore,
-        'timeStamp': timeStamp
+        'sentTime': sentTime
       };
 
   Message.fromJson(Map<String, dynamic> map)
@@ -29,31 +29,39 @@ class Message {
         createdAt = map['createdAt'],
         contactNo = map['contactNo'],
         alignmentSemaphore = map['alignmentSemaphore'],
-        timeStamp = map['timeStamp'];
+        sentTime = map['sentTime'];
 }
 
 class MessageTile extends StatelessWidget {
   final Message message;
-  MessageTile({@required this.message});
+  final int contactSema;
+  MessageTile({
+    @required this.message,
+    this.contactSema
+  });
   @override
   Widget build(BuildContext context) {
-    String timeString = '';
-    if (message.createdAt != null) {
-      timeString = '${message.timeStamp.toDate().hour} : ${message.timeStamp.toDate().second}';
+    int alSem = message.alignmentSemaphore;
+    if (message.alignmentSemaphore == contactSema){
+      alSem = 0;
+    } else {
+      alSem = 1;
     }
+    String timeString = message.sentTime;
     return Row(
-      mainAxisAlignment: message.alignmentSemaphore == 1
+      mainAxisAlignment: 1 == alSem
           ? MainAxisAlignment.start
           : MainAxisAlignment.end,
       children: [
         Container(
           margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            color: message.alignmentSemaphore == 1
-                ? Color(0xFFF2F2F7)
-                : Color(0xFF309c4e),
-          ),
+              borderRadius: BorderRadius.circular(10),
+              color: 1 == alSem
+                  ? Color(0xFFF2F2F7)
+                  : Colors.blue[50]
+              // : Color(0xFF309c6e),
+              ),
           child: Wrap(
             direction: Axis.vertical,
             children: [
@@ -73,9 +81,9 @@ class MessageTile extends StatelessWidget {
                               text: message.messageBody,
                               style: Utility.getChatTextStyle(
                                   16,
-                                  message.alignmentSemaphore == 1
+                                  1 == alSem
                                       ? Colors.grey[600]
-                                      : Colors.white))),
+                                      : Colors.blue))),
                     ),
                   ),
                   Padding(
@@ -83,9 +91,9 @@ class MessageTile extends StatelessWidget {
                     child: Text(
                       timeString,
                       style: TextStyle(
-                          color: message.alignmentSemaphore == 1
+                          color: 1 == alSem
                               ? Colors.grey[600]
-                              : Colors.white),
+                              : Colors.blue),
                     ),
                   )
                 ],
