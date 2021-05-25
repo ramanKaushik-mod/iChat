@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ichat/Screens/imageCapture.dart';
+import 'package:ichat/helperCode/firebaseFunctions.dart';
 import 'package:ichat/helperCode/helperClasses.dart';
 import 'package:ichat/helperCode/helperFunctions.dart';
+import 'package:ichat/models/userModel.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -13,39 +15,22 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   TextEditingController _controller = TextEditingController();
   FocusNode _focusNode;
-  DialogUtility dialogAppear;
-
   Image imageFromPreferences;
   Future<int> value;
 
   int toggle = 0;
   String dialogCode;
-
+  HandlingFirebaseDB handlingFirebaseDB;
   @override
   void initState() {
     super.initState();
     _focusNode = FocusNode();
+    getDBInstance();
   }
 
-  _changeState() {
-    setState(() {
-      toggle = 1;
-      _focusNode.unfocus();
-    });
-
-    if (dialogCode != "Loading...") {
-      Future.delayed(Duration(seconds: 1), () {
-        setState(() {
-          toggle = 0;
-          _focusNode.requestFocus();
-        });
-      });
-    }
-  }
-
-  _showBottomSheet(code) {
-    dialogCode = code;
-    _changeState();
+  getDBInstance() async {
+    handlingFirebaseDB =
+        HandlingFirebaseDB(contactID: await Utility.getContactFromPreference());
   }
 
   _loadImageFromPreferences() {
@@ -63,48 +48,59 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    return SafeArea(
-      child: Scaffold(
-        resizeToAvoidBottomInset: false,
-        bottomSheet: toggle == 0 ? null : bottomSheet(dialogCode),
-        body: Stack(
-          children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _firstPage(width),
-                Container(
-                  margin: EdgeInsets.all(20),
-                  child: FloatingActionButton(
-                    onPressed: () async {
-                      if (_controller.text.trim().length > 2) {
-                        await Utility.addUserName(_controller.text.trim());
-                        Map<String, dynamic> map = {
-                          'contactNo': await Utility.getContactFromPreference(),
-                          'name': _controller.text.trim(),
-                          'imageStr': await Utility.getImageFromPreferences()
-                        };
-                        _showBottomSheet("Loading...");
-                        FirebaseUtility.addUserToUsers(map, nextPage: () async {
-                          await Utility.addLoginStatus();
-                          Phoenix.rebirth(context);
-                        });
-                      } else {
-                        _showBottomSheet("enter a valid name ( length > 3 )");
-                      }
-                    },
-                    child: Icon(Icons.arrow_forward_ios_sharp),
+    final height = MediaQuery.of(context).size.height;
+    return WillPopScope(
+      onWillPop: () {
+        Utility.exitApp(context);
+        return Future<bool>.value(true);
+      },
+      child: SafeArea(
+        child: Scaffold(
+          resizeToAvoidBottomInset: false,
+          body: Stack(
+            children: [
+              Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _firstPage(width, height),
+                  Container(
+                    margin: EdgeInsets.all(20),
+                    child: FloatingActionButton(
+                      onPressed: () async {
+                        if (_controller.text.trim().length > 2) {
+                          await Utility.addUserName(_controller.text.trim());
+                          UserModel userModel = UserModel(
+                              contactNo:
+                                  await Utility.getContactFromPreference(),
+                              name: _controller.text.trim(),
+                              imageStr:
+                                  await Utility.getImageFromPreferences());
+
+                          showBottomModal(context, dialogCode: "Loading...");
+                          handlingFirebaseDB.addUserToUsers( userModel:userModel,
+                              nextPage: () async {
+                            await Utility.addLoginStatus();
+                            await Utility.setStatus(userModel.contactStatus);
+                            Phoenix.rebirth(context);
+                          });
+                        } else {
+                          showBottomModal(context,
+                              dialogCode: "enter a valid name ( length > 3 )");
+                        }
+                      },
+                      child: Icon(Icons.arrow_forward_ios_sharp),
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  _firstPage(double width) {
+  _firstPage(double width, double height) {
     return SingleChildScrollView(
       child: Container(
         width: width,
@@ -113,25 +109,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(
-              height: 20,
+              height: 50,
             ),
-            Text(
-              "Profile info",
-              style: GoogleFonts.muli(
-                  fontWeight: FontWeight.w600,
-                  fontSize: width / 20,
-                  color: Colors.blue[500]),
+            DecorateText.getDecoratedText(
+              text: "Profile info",
+              height: height,
+              color: Colors.blue[500],
+              fontWeight: FontWeight.w600,
             ),
             SizedBox(
               height: 20,
             ),
-            Text(
-              "Provide your name and an optional photo",
-              style: GoogleFonts.muli(
-                  fontWeight: FontWeight.w300,
-                  fontSize: width / 28,
-                  color: Colors.grey[800]),
-            ),
+            DecorateText.getDecoratedText(
+                text: "Provide your name and an optional photo",
+                height: height,
+                color: Colors.grey[700],
+                fontWeight: FontWeight.w400,
+                little: 'little'),
             SizedBox(
               height: 30,
             ),
@@ -147,9 +141,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Navigator.of(context).push(MaterialPageRoute(
                               builder: (context) => ImageCapture(function: () {
                                     imageFromPreferences = null;
-                                    if (imageFromPreferences == null) {
-                                      _loadImageFromPreferences();
-                                    }
+                                    _loadImageFromPreferences();
                                   })));
                         },
                         child: Container(
@@ -165,9 +157,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: CircleAvatar(
                             backgroundColor: Color(0xFFF2F2F3),
                             radius: 60,
+                          
                             child: ClipRRect(
+                              clipBehavior: Clip.hardEdge,
                               borderRadius: BorderRadius.circular(60),
-                              child: imageFromPreferences,
+                              child: AspectRatio(
+                                aspectRatio: 1,
+                                child: imageFromPreferences),
                             ),
                           ),
                         ),
@@ -200,26 +196,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   }
                 }),
             SizedBox(
-              height: 10,
+              height: 40,
             ),
             Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: Colors.blue[50],
+              ),
               width: width / 1.2,
               child: TextField(
                 autofocus: true,
                 controller: _controller,
                 focusNode: _focusNode,
-                style: GoogleFonts.muli(
-                    decoration: TextDecoration.none,
-                    fontWeight: FontWeight.w600,
-                    fontSize: width / 20,
-                    color: Colors.grey[500]),
+                style: DecorateText.getDecoratedTextStyle(
+                  height:height,
+                    fontSize: 20, color: Colors.blue),
                 textAlign: TextAlign.start,
                 cursorColor: Colors.blue,
                 keyboardType: TextInputType.visiblePassword,
                 decoration: InputDecoration(
-                    focusedBorder: UnderlineInputBorder(
-                        borderSide:
-                            BorderSide(width: 2, color: Colors.grey[300])),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 20),
+                    border: UnderlineInputBorder(borderSide: BorderSide.none),
                     hintText: "Enter your name",
                     hintStyle: GoogleFonts.muli(
                         fontWeight: FontWeight.w600,

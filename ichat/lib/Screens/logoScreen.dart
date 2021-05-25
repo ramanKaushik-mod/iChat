@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:ichat/Screens/authScreen.dart';
 import 'package:ichat/helperCode/helperClasses.dart';
 
 class LogoScreen extends StatefulWidget {
@@ -23,8 +22,7 @@ class _LogoScreenState extends State<LogoScreen> {
       if (status == 0) {
         Navigator.pushNamed(context, '/checkPurpose');
       } else {
-        Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => AuthScreen()));
+        Navigator.pushNamed(context, '/verifyNumberScreen');
       }
     });
   }
@@ -44,7 +42,7 @@ class _LogoScreenState extends State<LogoScreen> {
                   backgroundColor: Colors.white,
                   child: ClipRRect(
                       borderRadius: BorderRadius.circular(40),
-                      child: Image.asset("assets\\iChatLogo.jpg"))),
+                      child: Image.asset("assets\\iChatLogo.PNG"))),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,

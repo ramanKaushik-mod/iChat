@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:ichat/helperCode/helperClasses.dart';
+import 'package:ichat/helperCode/firebaseFunctions.dart';
 
 class ApproveRequestModel {
   final String contactNo;
@@ -22,23 +23,38 @@ class ApproveRequestModel {
 
 class ApproveRequestTile extends StatefulWidget {
   final ApproveRequestModel model;
-  ApproveRequestTile({@required this.model});
+  final Function updateUI;
+  ApproveRequestTile({@required this.model, this.updateUI});
 
   @override
   _ApproveRequestTileState createState() => _ApproveRequestTileState();
 }
 
 class _ApproveRequestTileState extends State<ApproveRequestTile> {
+  HandlingFirebaseDB handlingFirebaseDB;
   String add = 'Adding', remove = 'Removing';
+
+  @override
+  void initState() {
+    super.initState();
+    getDBInstance();
+  }
+
+  getDBInstance() async {
+    handlingFirebaseDB =
+        HandlingFirebaseDB(contactID: await Utility.getContactFromPreference());
+  }
+
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {},
-      child: Card(
-        elevation: 0,
-        margin: EdgeInsets.all(8.0),
-        color: Color(0xFFF2F2F7),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        final height = MediaQuery.of(context).size.height;
+    return Card(
+      elevation: 0,
+      margin: EdgeInsets.all(8.0),
+      color: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Container(
+        height: 80,
         child: Row(
           children: [
             Padding(
@@ -78,13 +94,11 @@ class _ApproveRequestTileState extends State<ApproveRequestTile> {
                             overflow: TextOverflow.ellipsis,
                             text: TextSpan(
                                 text: widget.model.name,
-                                style: Utility.getTextStyle(16, Colors.blue)))),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 10.0),
-                      child: Divider(
-                        height: 10,
-                        color: Colors.black,
-                      ),
+                                style: DecorateText.getDecoratedTextStyle(
+                                        height:height,
+                                    fontSize: 18, color: Colors.grey[400])))),
+                    SizedBox(
+                      height: 10,
                     ),
                     Flexible(
                         child: RichText(
@@ -92,16 +106,16 @@ class _ApproveRequestTileState extends State<ApproveRequestTile> {
                             overflow: TextOverflow.clip,
                             text: TextSpan(
                                 text: widget.model.contactNo,
-                                style: Utility.getTextStyle(12, Colors.blue)))),
+                                style: DecorateText.getDecoratedTextStyle(
+                                        height:height,
+                                    fontSize: 12, color: Colors.grey[600])))),
                   ],
                 ),
               ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
+              child: Wrap(
                 children: [
                   TextButton(
                       style: TextButton.styleFrom(
@@ -109,41 +123,34 @@ class _ApproveRequestTileState extends State<ApproveRequestTile> {
                           backgroundColor: Colors.blue,
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20))),
-                      onPressed: () {
-                        FirebaseUtility.addContactToContactList(
-                            requesteeMap: widget.model.toJson(),
-                            updateUI: () {
-                              Navigator.pushReplacementNamed(
-                                  context, '/requestScreen');
-                            });
+                      onPressed: () async {
+                        await handlingFirebaseDB.addContactToContactList(
+                            otherContactId: widget.model.contactNo);
+
+                        widget.updateUI('check your contact list');
                       },
-                      child: Container(
-                          width: 50,
-                          child: Center(
-                              child: Text(
-                            'Add',
-                            style: Utility.getTextStyle(12, Colors.white),
-                          )))),
+                      child: Center(
+                          child: Text(
+                        'add',
+                      ))),
+                  SizedBox(
+                    width: 10,
+                  ),
                   TextButton(
                       style: TextButton.styleFrom(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 10, vertical: 0),
                           primary: Colors.white,
                           backgroundColor: Colors.blue,
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20))),
-                      onPressed: () {
-                        FirebaseUtility.removeFromContactList(
-                            requester: widget.model.contactNo,
-                            updateUI: () {
-                              Navigator.pushReplacementNamed(
-                                  context, '/requestScreen');
-                            });
+                      onPressed: () async {
+                        await handlingFirebaseDB
+                            .removeRequestFromApprovalAndPendingList(
+                                otherContactId: widget.model.contactNo);
+                        widget.updateUI('request removed');
                       },
-                      child: Container(
-                          width: 50,
-                          child: Center(
-                              child: Text('Remove',
-                                  style: Utility.getTextStyle(
-                                      12, Colors.white))))),
+                      child: Center(child: Text('deny'))),
                 ],
               ),
             )

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:ichat/helperCode/firebaseFunctions.dart';
 import 'package:ichat/helperCode/helperClasses.dart';
 import 'package:ichat/helperCode/helperFunctions.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -17,18 +18,32 @@ class ImageCapture extends StatefulWidget {
 
 class _ImageCaptureState extends State<ImageCapture> {
   PickedFile _imageFile;
+  HandlingFirebaseDB handlingFirebaseDB;
+
+  @override
+  void initState() {
+    super.initState();
+    getDBInstance();
+  }
+
+  getDBInstance() async {
+    handlingFirebaseDB =
+        HandlingFirebaseDB(contactID: await Utility.getContactFromPreference());
+  }
 
   Future<void> _pickImage(ImageSource source) async {
-    PickedFile selected = await ImagePicker().getImage(source: source, imageQuality: 50);
+    PickedFile selected =
+        await ImagePicker().getImage(source: source, imageQuality: 50);
     setState(() {
       _imageFile = selected;
     });
   }
 
-
   Future<void> _cropImage() async {
     File cropped = await ImageCropper.cropImage(
+        aspectRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
         sourcePath: _imageFile.path,
+        cropStyle: CropStyle.circle,
         androidUiSettings: AndroidUiSettings(
           toolbarTitle: "edit your profile pic",
           backgroundColor: Colors.white,
@@ -115,7 +130,7 @@ class _ImageCaptureState extends State<ImageCapture> {
                               padding: EdgeInsets.all(4),
                               child: Image.file(
                                 File(_imageFile.path),
-                                height: width * 1.2,
+                                height: width,
                               )),
                         )
                       ],
@@ -151,27 +166,34 @@ class _ImageCaptureState extends State<ImageCapture> {
                         )),
                     FloatingActionButton(
                         onPressed: () async {
-                          String base64String = Utility.base64String(
-                              File(_imageFile.path).readAsBytesSync());
-                          if (File(_imageFile.path).readAsBytesSync().length >=
-                              800000) {
-                            showDialogue(context, 'Image size is too big');
-                            return;
-                          }
-                          await Utility.saveImageToPreferences(base64String);
-                          if (widget.function != null) {
-                            Future.delayed(Duration(seconds: 2), () {
-                              widget.function();
-                            });
-                          }
-                          Navigator.of(context).pop();
-                          // Center(
-                          //   child: CircularProgressIndicator(),
-                          // );
-                          // FirebaseFireStoreServices.updateUserImage(base64String);
+                          if (_imageFile != null) {
+                            String base64String = Utility.base64String(
+                                File(_imageFile.path).readAsBytesSync());
+                            if (File(_imageFile.path)
+                                    .readAsBytesSync()
+                                    .length >=
+                                800000) {
+                              showBottomModal(
+                                context,
+                                dialogCode: 'Image size is too big',
+                              );
+                              return;
+                            }
+                            await Utility.saveImageToPreferences(base64String);
 
-                          // Phoenix.rebirth(context);
-                          // Future.delayed(Duration(seconds: 5), ()=>Phoenix.rebirth(context));
+                            await handlingFirebaseDB.updateUserImage();
+                            if (widget.function != null) {
+                              Future.delayed(Duration(seconds: 2), () {
+                                widget.function();
+                              });
+                            }
+                            Navigator.of(context).pop();
+                          } else {
+                            showBottomModal(
+                              context,
+                              dialogCode: 'no image is selected',
+                            );
+                          }
                         },
                         heroTag: "btn2",
                         backgroundColor: Colors.blue[50],

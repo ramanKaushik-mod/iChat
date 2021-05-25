@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:ichat/Screens/authScreen.dart';
-import 'package:ichat/Screens/checkPurpose.dart';
+import 'package:ichat/Screens/AuthFiles/verifyNumberScreen.dart';
+import 'package:ichat/Screens/AuthFiles/verifySmsScreen.dart';
+import 'package:ichat/Screens/imageCapture.dart';
 import 'package:ichat/Screens/logoScreen.dart';
+import 'package:ichat/Screens/mainScreen.dart';
 import 'package:ichat/Screens/messageScreen.dart';
 import 'package:ichat/Screens/pages.dart';
 import 'package:ichat/Screens/pendingAndRequests.dart';
+import 'package:ichat/Screens/profileScreen.dart';
 import 'package:ichat/Screens/userProfile.dart';
 
 class RouteGenerator {
@@ -14,11 +17,8 @@ class RouteGenerator {
     switch (settings.name) {
       case '/':
         return MaterialPageRoute(builder: (_) => LogoScreen());
-
-      case '/authScreen':
-        return MaterialPageRoute(builder: (_) => AuthScreen());
       case '/checkPurpose':
-        return MaterialPageRoute(builder: (_) => CheckPurpose());
+        return MaterialPageRoute(builder: (_) => MainScreen());
       case '/pendingScreen':
         return MaterialPageRoute(builder: (_) => PendingScreen());
       case '/requestScreen':
@@ -27,9 +27,23 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => ContactPage());
       case '/messageScreen':
         return MaterialPageRoute(
-            builder: (_) => MessageScreen(contactModel: args));
+            builder: (_) => MessageScreen(contactModel: args,));
       case '/userScreen':
-        return MaterialPageRoute(builder: (_) => UserProfile(model: args,));
+        return MaterialPageRoute(builder: (_) => UserProfile(contactNo: args,));
+      case '/verifyNumberScreen':
+        return MaterialPageRoute(builder: (_) => VerifyNumberScreen());
+      case '/verifySmsScreen':
+        return MaterialPageRoute(
+            builder: (_) => VerifySmsScreen(
+                  data: args,
+                ));
+      case '/profileScreen':
+        return MaterialPageRoute(builder: (_) => ProfileScreen());
+      case '/imageCapture':
+        return MaterialPageRoute(
+            builder: (_) => ImageCapture(
+                  function: args,
+                ));
       default:
         return _errorRoute();
     }
