@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:ichat/helperCode/firebaseFunctions.dart';
 import 'package:ichat/models/approveRequestModel.dart';
 import 'package:ichat/models/userModel.dart';
@@ -59,6 +58,7 @@ class _PendingScreenState extends State<PendingScreen> {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: snapshot.data.docs
                               .map((e) => UserTile(
+                                contextOfMainScreen: context,
                                   buttonText: 'cancel',
                                   userModel: UserModel.fromMap(e.data()),
                                   notifyChanges: () async {

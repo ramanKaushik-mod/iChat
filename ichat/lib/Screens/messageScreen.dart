@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:ichat/Screens/mainScreen.dart';
 import 'package:ichat/helperCode/firebaseFunctions.dart';
 import 'package:ichat/helperCode/helperClasses.dart';
 import 'package:ichat/models/messageModel.dart';
@@ -19,19 +18,25 @@ class _MessageScreenState extends State<MessageScreen> {
   Future<int> readyDB;
   HandlingFirebaseDB handlingFirebaseDB;
   TextEditingController _controller = TextEditingController();
-
+  FocusNode focusNode;
   CollectionReference collectionReference =
       FirebaseFirestore.instance.collection('Chats');
   String lastMSG;
+  bool flag = false;
   @override
   void initState() {
     super.initState();
     getDBInstance();
+    focusNode = FocusNode();
   }
 
   getDBInstance() async {
+    await Utility.setChatGlobalStatus(true);
     handlingFirebaseDB =
         HandlingFirebaseDB(contactID: await Utility.getContactFromPreference());
+    flag = await handlingFirebaseDB.checkContactInContacts(
+        otherContactId: widget.contactModel['contactNo']);
+    handlingFirebaseDB.changeContactChatStatus(status: true);
     setState(() {
       readyDB = Future.value(0);
     });
@@ -63,21 +68,41 @@ class _MessageScreenState extends State<MessageScreen> {
                     Map<String, dynamic> map = snapshot.data.docs.last.data();
                     lastMSG = map['messageBody'];
                   }
+                  List<Widget> messageList = [];
+                  String str = '';
+                  if (snapshot.data.docs.length != 0) {
+                    messageList = snapshot.data.docs.map((e) {
+                      if (str != e.data()['sentDate']) {
+                        str = e.data()['sentDate'];
+
+                        return MessageTile(
+                          otherContactId: widget.contactModel['contactNo'],
+                          message: Message.fromJson(e.data()),
+                          contactSema:
+                              widget.contactModel['alignmentSemaphore'],
+                          lastSnapShot: snapshot,
+                          cd: 'not null',
+                        );
+                      } else {
+                        return MessageTile(
+                          otherContactId: widget.contactModel['contactNo'],
+                          message: Message.fromJson(e.data()),
+                          contactSema:
+                              widget.contactModel['alignmentSemaphore'],
+                          lastSnapShot: snapshot,
+                        );
+                      }
+                    }).toList();
+                  }
+
                   return SingleChildScrollView(
                     reverse: true,
                     scrollDirection: Axis.vertical,
                     physics: BouncingScrollPhysics(),
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: snapshot.data.docs
-                          .map((e) => MessageTile(
-                                message: Message.fromJson(e.data()),
-                                contactSema:
-                                    widget.contactModel['alignmentSemaphore'],
-                              ))
-                          .toList(),
-                    ),
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: messageList),
                   );
                 });
           }
@@ -91,13 +116,16 @@ class _MessageScreenState extends State<MessageScreen> {
     );
     return SafeArea(
       child: WillPopScope(
-        onWillPop: () {
-          Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => MainScreen()));
+        onWillPop: () async {
+          await Utility.setChatGlobalStatus(false);
+          Future.delayed(Duration(seconds: 1), () async {
+            await handlingFirebaseDB.changeContactChatStatus(status: false);
+          });
+          Navigator.pop(context);
           return Future.value(true);
         },
         child: Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: Color(0xFFF2F2F7),
           appBar: _appBar(context, height),
           body: Container(
             decoration: BoxDecoration(color: Color(0xFFF2F2F7)),
@@ -118,7 +146,11 @@ class _MessageScreenState extends State<MessageScreen> {
       elevation: 0,
       automaticallyImplyLeading: false,
       leading: GestureDetector(
-          onTap: () {
+          onTap: () async {
+            await Utility.setChatGlobalStatus(true);
+            Future.delayed(Duration(seconds: 1), () async {
+              await handlingFirebaseDB.changeContactChatStatus(status: false);
+            });
             Navigator.pop(context);
           },
           child: Icon(
@@ -151,6 +183,15 @@ class _MessageScreenState extends State<MessageScreen> {
                       );
                     }
                     Map<String, dynamic> map = snapshot.data.data();
+                    if (widget.contactModel['name'] != map['name']) {
+                      Future.delayed(Duration(milliseconds: 10), () async {
+                        await handlingFirebaseDB
+                            .updateOtherNameInActiveContactList(
+                                otherContactId:
+                                    widget.contactModel['contactNo'],
+                                name: map['name']);
+                      });
+                    }
                     return Wrap(
                       alignment: WrapAlignment.center,
                       crossAxisAlignment: WrapCrossAlignment.end,
@@ -163,8 +204,8 @@ class _MessageScreenState extends State<MessageScreen> {
                                     height: height,
                                     fontSize: 16,
                                     color: Colors.deepPurple))),
-                        if (map['contactChatStatus'] ==
-                            true) ...[
+                        if (map['contactChatStatus'] == true &&
+                            flag == true) ...[
                           SizedBox(
                             width: 5,
                           ),
@@ -218,6 +259,7 @@ class _MessageScreenState extends State<MessageScreen> {
                   color: Color(0xFFF2F2F7),
                 ),
                 child: TextField(
+                  enabled: flag,
                   textAlignVertical: TextAlignVertical.center,
                   textCapitalization: TextCapitalization.sentences,
                   controller: _controller,
@@ -229,6 +271,7 @@ class _MessageScreenState extends State<MessageScreen> {
                   maxLines: 5,
                   minLines: 1,
                   // expands: true,
+                  focusNode: focusNode,
                   decoration: InputDecoration(
                       contentPadding: EdgeInsets.symmetric(vertical: 16),
                       border: UnderlineInputBorder(
@@ -262,8 +305,9 @@ class _MessageScreenState extends State<MessageScreen> {
                         contactNo: widget.contactModel['contactNo'],
                         alignmentSemaphore:
                             widget.contactModel['alignmentSemaphore'],
-                        sentTime:
-                            ' ${dateTime.day}-${dateTime.month}-${dateTime.year}  ${dateTime.hour} : ${dateTime.minute}',
+                        sentTime: '${dateTime.hour} : ${dateTime.minute}',
+                        sentDate:
+                            '${dateTime.year}-${dateTime.month}-${dateTime.day}',
                         messageId: await handlingFirebaseDB.newChatRef(
                             otherContactId: widget.contactModel['contactNo'])));
 
@@ -274,6 +318,9 @@ class _MessageScreenState extends State<MessageScreen> {
                         lastMessage: lastMSG);
                   });
                 }
+
+                handlingFirebaseDB.checkUserActiveOrNot(
+                    otherContactId: widget.contactModel['contactNo']);
               }
             },
             child: Icon(

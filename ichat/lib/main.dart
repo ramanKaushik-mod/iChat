@@ -37,6 +37,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   getContactNo() async {
+    await Utility.setChatGlobalStatus(false);
     contactNo = await Utility.getContactFromPreference();
     handlingFirebaseDB = HandlingFirebaseDB(contactID: contactNo);
     loginStatus = await Utility.getLoginStatus();
@@ -54,17 +55,17 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
     // These are the callbacks
     switch (state) {
-      case AppLifecycleState.resumed:
+      case AppLifecycleState.inactive:
         if (loginStatus == 0) {
-          handlingFirebaseDB.changeContactChatStatus(status: true);
+          await handlingFirebaseDB.changeAccTOStateContactChatStatus();
         }
         break;
-      case AppLifecycleState.inactive:
+      case AppLifecycleState.resumed:
+        if (await Utility.getChatGlobalStatus()) {
+          await handlingFirebaseDB.changeContactChatStatus(status: true);
+        }
         break;
       case AppLifecycleState.paused:
-        if (loginStatus == 0) {
-          handlingFirebaseDB.changeContactChatStatus(status: false);
-        }
         break;
       case AppLifecycleState.detached:
         break;

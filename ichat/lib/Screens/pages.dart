@@ -108,158 +108,6 @@ class _ChatPageState extends State<ChatPage> {
         },
       ),
     );
-    var bottomSheetContainer = Container(
-      margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: Colors.white,
-      ),
-      width: width,
-      child: Wrap(
-        alignment: WrapAlignment.end,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    widget.changePage();
-                  },
-                  child: Card(
-                    elevation: 10,
-                    margin: EdgeInsets.only(right: 20),
-                    color: Color(0xFFF2F2F7),
-                    shadowColor: Color(0xFFF2F2F7),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20)),
-                    child: Container(
-                        padding: EdgeInsets.all(16),
-                        child: Center(
-                          child: DecorateText.getDecoratedText(
-                              text: 'Search iChat',
-                              height: height,
-                              color: Colors.green,
-                              fontWeight: FontWeight.w600),
-                        )),
-                  ),
-                ),
-              ),
-              Card(
-                elevation: 10,
-                color: Color(0xFFF2F2F7),
-                shadowColor: Color(0xFFF2F2F7),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),
-                child: IconButton(
-                  splashColor: Colors.deepPurple,
-                  splashRadius: 20,
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/userScreen',
-                        arguments: handlingFirebaseDB.contactID);
-                  },
-                  icon: Icon(
-                    Icons.person,
-                    color: Colors.deepPurple,
-                  ),
-                ),
-              ),
-              SizedBox(
-                width: 10,
-              ),
-              Card(
-                elevation: 20,
-                color: Color(0xFFF2F2F7),
-                shadowColor: Color(0xFFF2F2F7),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),
-                child: IconButton(
-                  splashColor: Colors.grey[600],
-                  splashRadius: 20,
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/contactScreen');
-                  },
-                  icon: Icon(
-                    Icons.notifications,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              )
-            ],
-          ),
-          Container(
-            height: 10,
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {},
-                  child: Card(
-                    elevation: 10,
-                    margin: EdgeInsets.only(right: 20),
-                    color: Color(0xFFF2F2F7),
-                    shadowColor: Color(0xFFF2F2F7),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20)),
-                    child: Container(
-                        padding: EdgeInsets.all(16),
-                        child: Center(
-                          child: DecorateText.getDecoratedText(
-                              text: 'Share iChat',
-                              height: height,
-                              color: Colors.blue,
-                              fontWeight: FontWeight.w800),
-                        )),
-                  ),
-                ),
-              ),
-              Card(
-                elevation: 10,
-                color: Color(0xFFF2F2F7),
-                shadowColor: Color(0xFFF2F2F7),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),
-                child: IconButton(
-                  splashColor: Colors.green,
-                  splashRadius: 20,
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/contactScreen');
-                  },
-                  icon: Icon(
-                    Icons.settings,
-                    color: Colors.green,
-                  ),
-                ),
-              ),
-              SizedBox(
-                width: 10,
-              ),
-              Card(
-                elevation: 10,
-                color: Color(0xFFF2F2F7),
-                shadowColor: Color(0xFFF2F2F7),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),
-                child: IconButton(
-                  splashColor: Colors.deepOrange,
-                  splashRadius: 20,
-                  onPressed: () {
-                    widget.changePage();
-                  },
-                  icon: Icon(
-                    Icons.search,
-                    color: Colors.deepOrange,
-                  ),
-                ),
-              )
-            ],
-          )
-        ],
-      ),
-    );
     return WillPopScope(
       onWillPop: () {
         widget.close();
@@ -267,6 +115,111 @@ class _ChatPageState extends State<ChatPage> {
       },
       child: Scaffold(
         backgroundColor: Colors.white,
+        bottomSheet: BottomSheet(
+            onClosing: () {},
+            enableDrag: false,
+            builder: (BuildContext context) {
+              var container = Container(
+                padding: EdgeInsets.all(10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Card(
+                      elevation: 20,
+                      color: Color(0xFFF2F2F7),
+                      shadowColor: Color(0xFFF2F2F7),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(50)),
+                      child: IconButton(
+                        splashColor: Colors.green,
+                        splashRadius: 20,
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/contactScreen');
+                        },
+                        icon: Icon(
+                          Icons.settings,
+                          color: Colors.green,
+                        ),
+                      ),
+                    ),
+                    Card(
+                        elevation: 20,
+                        color: Color(0xFFF2F2F7),
+                        shadowColor: Color(0xFFF2F2F7),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(50)),
+                        child: Stack(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(50),
+                                  color: Colors.transparent),
+                              child: Icon(Icons.notifications,
+                                  color: Colors.deepPurple),
+                            ),
+                            Positioned(
+                                top: 0,
+                                right: 1,
+                                child: Consumer<GetChanges>(
+                                    builder: (BuildContext context, value,
+                                            Widget child) =>
+                                        value.getChatCount() != 0
+                                            ? Container(
+                                                child: Card(
+                                                    elevation: 20,
+                                                    color: Colors.deepPurple,
+                                                    child: Container(
+                                                        padding: EdgeInsets
+                                                            .symmetric(
+                                                                horizontal: 4,
+                                                                vertical: 1),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(20),
+                                                          color: Colors
+                                                              .transparent,
+                                                        ),
+                                                        child: Center(
+                                                            child: Text(
+                                                          '${value.getChatCount()}',
+                                                          style: DecorateText
+                                                              .getDecoratedTextStyle(
+                                                                  height:
+                                                                      height,
+                                                                  fontSize: 12,
+                                                                  color: Colors
+                                                                      .white),
+                                                        )))),
+                                              )
+                                            : Text(''))),
+                          ],
+                        )),
+                    Card(
+                      elevation: 20,
+                      color: Color(0xFFF2F2F7),
+                      shadowColor: Color(0xFFF2F2F7),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(50)),
+                      child: IconButton(
+                        splashColor: Colors.deepOrange,
+                        splashRadius: 20,
+                        onPressed: () {
+                          widget.changePage();
+                        },
+                        icon: Icon(
+                          Icons.person_search,
+                          color: Colors.deepOrange,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+              return container;
+            }),
         body: Container(
           color: Color(0xFFF2F2F7),
           height: height,
@@ -275,7 +228,6 @@ class _ChatPageState extends State<ChatPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               expanded,
-              bottomSheetContainer,
             ],
           ),
         ),
@@ -393,9 +345,15 @@ class _ContactPageState extends State<ContactPage> {
             onPressed: () {
               Navigator.pop(context);
             },
-            icon: Icon(Icons.arrow_back_ios, color: Colors.grey[600])),
+            icon: Icon(Icons.arrow_back_ios, color: Colors.green)),
         elevation: 0,
         backgroundColor: Colors.white,
+        actions: [
+          IconButton(
+            onPressed: () {
+            },
+            icon: Icon(Icons.settings, color: Colors.greenAccent)),
+        ],
       ),
       body: Container(
         height: height,
@@ -571,8 +529,10 @@ class _RequestPageState extends State<RequestPage> {
                       Wrap(
                         children: [
                           ConstrainedBox(
-                            constraints:
-                                BoxConstraints(maxHeight: 240, minHeight: 140),
+                            constraints: BoxConstraints(
+                                maxHeight:
+                                    height < 680 ? height / 2.8 : height / 3.45,
+                                minHeight: height / 4),
                             child: Container(
                               margin: EdgeInsets.all(10),
                               decoration: BoxDecoration(
@@ -580,208 +540,221 @@ class _RequestPageState extends State<RequestPage> {
                                   color: Colors.white),
                               child: Column(
                                 children: [
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Card(
-                                          color: Color(0xFFF2F2F7),
-                                          shadowColor: Colors.white,
-                                          shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(14)),
-                                          elevation: 20,
-                                          margin: EdgeInsets.all(10),
-                                          child: Container(
-                                            padding: EdgeInsets.all(20),
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(14),
-                                            ),
-                                            child: TextField(
-                                              showCursor: false,
-                                              controller: _controller,
-                                              style: DecorateText
-                                                  .getDecoratedTextStyle(
-                                                      height: height,
-                                                      fontSize: 20,
-                                                      color: Colors.deepPurple),
-                                              textAlign: TextAlign.center,
-                                              keyboardType:
-                                                  TextInputType.number,
-                                              focusNode: _focusNode,
-                                              decoration: InputDecoration(
-                                                  border: UnderlineInputBorder(
-                                                    borderSide: BorderSide.none,
-                                                  ),
-                                                  hintText: 'Search Here',
-                                                  hintStyle: DecorateText
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Card(
+                                            color: Color(0xFFF2F2F7),
+                                            shadowColor: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(14)),
+                                            elevation: 20,
+                                            margin: EdgeInsets.all(10),
+                                            child: Container(
+                                              padding:
+                                                  EdgeInsets.all(height / 40),
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(14),
+                                              ),
+                                              child: Center(
+                                                child: TextField(
+                                                  showCursor: false,
+                                                  controller: _controller,
+                                                  style: DecorateText
                                                       .getDecoratedTextStyle(
                                                           height: height,
-                                                          fontSize: 22,
+                                                          fontSize: 20,
                                                           color: Colors
-                                                              .deepPurple)),
+                                                              .deepPurple),
+                                                  textAlign: TextAlign.center,
+                                                  keyboardType:
+                                                      TextInputType.number,
+                                                  focusNode: _focusNode,
+                                                  decoration: InputDecoration(
+                                                      border:
+                                                          UnderlineInputBorder(
+                                                        borderSide:
+                                                            BorderSide.none,
+                                                      ),
+                                                      hintText: 'Search Here',
+                                                      hintStyle: DecorateText
+                                                          .getDecoratedTextStyle(
+                                                              height: height,
+                                                              fontSize: 22,
+                                                              color: Colors
+                                                                  .deepPurple)),
+                                                ),
+                                              ),
                                             ),
                                           ),
                                         ),
-                                      ),
-                                      Card(
-                                        elevation: 10,
-                                        margin: EdgeInsets.only(
-                                            right: 20, left: 10),
-                                        color: Color(0xFFF2F2F7),
-                                        shadowColor: Color(0xFFF2F2F7),
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(20)),
-                                        child: IconButton(
-                                          splashRadius: 20,
-                                          splashColor: Colors.deepPurple,
+                                        Card(
+                                          elevation: 10,
+                                          margin: EdgeInsets.only(
+                                              right: 20, left: 10),
                                           color: Color(0xFFF2F2F7),
-                                          onPressed: () async {
-                                            setState(() {
-                                              _focusNode.unfocus();
-                                            });
+                                          shadowColor: Color(0xFFF2F2F7),
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(20)),
+                                          child: IconButton(
+                                            splashRadius: 20,
+                                            splashColor: Colors.deepPurple,
+                                            color: Color(0xFFF2F2F7),
+                                            onPressed: () async {
+                                              setState(() {
+                                                _focusNode.unfocus();
+                                              });
 
-                                            var contactNo =
-                                                _controller.text.trim();
+                                              var contactNo =
+                                                  _controller.text.trim();
 
-                                            if (contactNo.length != 10) {
-                                              showBottomModal(context,
-                                                  dialogCode:
-                                                      'Enter a 10 digit number');
-                                            } else {
-                                              for (var item
-                                                  in contactNo.split("")) {
-                                                if (!item.contains(
-                                                    RegExp(r'[0-9]'))) {
+                                              if (contactNo.length != 10) {
+                                                showBottomModal(context,
+                                                    dialogCode:
+                                                        'Enter a 10 digit number');
+                                              } else {
+                                                for (var item
+                                                    in contactNo.split("")) {
+                                                  if (!item.contains(
+                                                      RegExp(r'[0-9]'))) {
+                                                    _controller.clear();
+                                                  }
+                                                }
+                                              }
+                                              if (await Utility
+                                                      .getContactFromPreference() ==
+                                                  '+91$contactNo') {
+                                                showBottomModal(context,
+                                                    dialogCode: "It's you");
+                                                _controller.clear();
+                                              }
+
+                                              if (await handlingFirebaseDB
+                                                      .presentInCollectionsOrNot(
+                                                          otherContactId:
+                                                              '+91$contactNo',
+                                                          collectionName:
+                                                              'Contacts') ==
+                                                  true) {
+                                                showBottomModal(context,
+                                                    dialogCode:
+                                                        "check ${_controller.text} in Contacts");
+                                                _controller.clear();
+                                              } else if (await handlingFirebaseDB
+                                                      .presentInCollectionsOrNot(
+                                                          otherContactId:
+                                                              '+91$contactNo',
+                                                          collectionName:
+                                                              'PendingList') ==
+                                                  true) {
+                                                showBottomModal(context,
+                                                    dialogCode:
+                                                        "${_controller.text} present in Request Queue");
+                                                _controller.clear();
+                                              } else if (await handlingFirebaseDB
+                                                      .presentInCollectionsOrNot(
+                                                          otherContactId:
+                                                              '+91$contactNo',
+                                                          collectionName:
+                                                              'ForApproveList') ==
+                                                  true) {
+                                                showBottomModal(context,
+                                                    dialogCode:
+                                                        "${_controller.text} present in Pending Queue");
+                                                _controller.clear();
+                                              }
+
+                                              if (_controller.text
+                                                      .trim()
+                                                      .length ==
+                                                  10) {
+                                                //check that number exists or not
+                                                //if exists, turn it into a UserTile object
+                                                Map<String, dynamic> map =
+                                                    await handlingFirebaseDB
+                                                        .findUser(
+                                                            otherContactId:
+                                                                '+91$contactNo');
+
+                                                if (map != null &&
+                                                    map.isNotEmpty) {
+                                                  var getChanges =
+                                                      Provider.of<GetChanges>(
+                                                          context,
+                                                          listen: false);
+                                                  _userTile = UserTile(
+                                                      contextOfMainScreen:
+                                                          context,
+                                                      buttonText: 'request',
+                                                      userModel:
+                                                          UserModel.fromMap(
+                                                              map),
+                                                      notifyChanges: () async {
+                                                        getChanges
+                                                            .removeUserTile();
+                                                      });
+
+                                                  getChanges.updateUserTile(
+                                                      _userTile);
+                                                } else {
+                                                  showBottomModal(context,
+                                                      dialogCode:
+                                                          '${_controller.text.trim()} is not registered');
                                                   _controller.clear();
                                                 }
                                               }
-                                            }
-                                            if (await Utility
-                                                    .getContactFromPreference() ==
-                                                '+91$contactNo') {
-                                              showBottomModal(context,
-                                                  dialogCode: "It's you");
-                                              _controller.clear();
-                                            }
-
-                                            if (await handlingFirebaseDB
-                                                    .presentInCollectionsOrNot(
-                                                        otherContactId:
-                                                            '+91$contactNo',
-                                                        collectionName:
-                                                            'Contacts') ==
-                                                true) {
-                                              showBottomModal(context,
-                                                  dialogCode:
-                                                      "check ${_controller.text} in Contacts");
-                                              _controller.clear();
-                                            } else if (await handlingFirebaseDB
-                                                    .presentInCollectionsOrNot(
-                                                        otherContactId:
-                                                            '+91$contactNo',
-                                                        collectionName:
-                                                            'PendingList') ==
-                                                true) {
-                                              showBottomModal(context,
-                                                  dialogCode:
-                                                      "${_controller.text} present in Request Queue");
-                                              _controller.clear();
-                                            } else if (await handlingFirebaseDB
-                                                    .presentInCollectionsOrNot(
-                                                        otherContactId:
-                                                            '+91$contactNo',
-                                                        collectionName:
-                                                            'ForApproveList') ==
-                                                true) {
-                                              showBottomModal(context,
-                                                  dialogCode:
-                                                      "${_controller.text} present in Pending Queue");
-                                              _controller.clear();
-                                            }
-
-                                            if (_controller.text
-                                                    .trim()
-                                                    .length ==
-                                                10) {
-                                              //check that number exists or not
-                                              //if exists, turn it into a UserTile object
-                                              Map<String, dynamic> map =
-                                                  await handlingFirebaseDB
-                                                      .findUser(
-                                                          otherContactId:
-                                                              '+91$contactNo');
-
-                                              if (map != null &&
-                                                  map.isNotEmpty) {
-                                                var getChanges =
-                                                    Provider.of<GetChanges>(
-                                                        context,
-                                                        listen: false);
-                                                _userTile = UserTile(
-                                                    buttonText: 'request',
-                                                    userModel:
-                                                        UserModel.fromMap(map),
-                                                    notifyChanges: () async {
-                                                      getChanges
-                                                          .removeUserTile();
-                                                    });
-
-                                                getChanges
-                                                    .updateUserTile(_userTile);
-                                              } else {
-                                                showBottomModal(context,
-                                                    dialogCode:
-                                                        '${_controller.text.trim()} is not registered');
-                                                _controller.clear();
-                                              }
-                                            }
-                                          },
-                                          icon: Icon(
-                                            Icons.search,
-                                            color: Colors.deepPurple,
+                                            },
+                                            icon: Icon(
+                                              Icons.search,
+                                              color: Colors.deepPurple,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                      Card(
-                                        elevation: 10,
-                                        margin: EdgeInsets.only(right: 20),
-                                        color: Color(0xFFF2F2F7),
-                                        shadowColor: Color(0xFFF2F2F7),
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(20)),
-                                        child: IconButton(
+                                        Card(
+                                          elevation: 10,
+                                          margin: EdgeInsets.only(right: 20),
                                           color: Color(0xFFF2F2F7),
-                                          splashRadius: 20,
-                                          splashColor: Colors.deepOrange,
-                                          onPressed: () {
-                                            Provider.of<GetChanges>(context,
-                                                    listen: false)
-                                                .turnUserTileToNull();
-                                            _controller.clear();
-                                          },
-                                          icon: Icon(Icons.clear,
-                                              color: Colors.deepOrange),
-                                        ),
-                                      )
-                                    ],
+                                          shadowColor: Color(0xFFF2F2F7),
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(20)),
+                                          child: IconButton(
+                                            color: Color(0xFFF2F2F7),
+                                            splashRadius: 20,
+                                            splashColor: Colors.deepOrange,
+                                            onPressed: () {
+                                              Provider.of<GetChanges>(context,
+                                                      listen: false)
+                                                  .turnUserTileToNull();
+                                              _controller.clear();
+                                            },
+                                            icon: Icon(Icons.clear,
+                                                color: Colors.deepOrange),
+                                          ),
+                                        )
+                                      ],
+                                    ),
                                   ),
                                   Expanded(
-                                    child: Consumer<GetChanges>(
-                                      builder: (BuildContext context, value,
-                                          Widget child) {
-                                        return value.userTile != null
-                                            ? value.getUpdatedUserTile()
-                                            : Center(
-                                                child: Icon(
-                                                  Icons.search,
-                                                  size: 50,
-                                                  color: Colors.blue[100],
-                                                ),
-                                              );
-                                      },
+                                    child: Container(
+                                      child: Consumer<GetChanges>(
+                                        builder: (BuildContext context, value,
+                                            Widget child) {
+                                          return value.userTile != null
+                                              ? value.getUpdatedUserTile()
+                                              : Center(
+                                                  child: Icon(
+                                                    Icons.search,
+                                                    size: 50,
+                                                    color: Colors.blue[100],
+                                                  ),
+                                                );
+                                        },
+                                      ),
                                     ),
                                   ),
                                 ],

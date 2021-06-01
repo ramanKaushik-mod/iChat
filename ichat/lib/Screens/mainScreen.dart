@@ -19,9 +19,9 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   getDBInstance() async {
+    await Utility.setAllMsgCToZero();
     handlingFirebaseDB = await HandlingFirebaseDB(
         contactID: await Utility.getContactFromPreference());
-    handlingFirebaseDB.changeContactChatStatus(status: true);
   }
 
   @override
@@ -85,6 +85,23 @@ class _MainScreenState extends State<MainScreen> {
         ),
       ),
       actions: [
+        Consumer<GetChanges>(
+          builder: (BuildContext context, val, Widget child) {
+            if (val.semaphoreForMainScreen == 0) {
+              return IconButton(
+                  splashRadius: 20,
+                  splashColor: Colors.deepOrange,
+                  onPressed: () {
+                  },
+                  icon: Icon(
+            Icons.search_sharp,
+            color: Colors.deepOrange,
+                  ));
+            } else {
+              return Container();
+            }
+          },
+        ),
         Padding(
           padding: const EdgeInsets.only(right: 14.0),
           child: IconButton(

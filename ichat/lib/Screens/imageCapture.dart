@@ -181,7 +181,16 @@ class _ImageCaptureState extends State<ImageCapture> {
                             }
                             await Utility.saveImageToPreferences(base64String);
 
-                            await handlingFirebaseDB.updateUserImage();
+                            Future.delayed(Duration(milliseconds: 20),()async{
+                              await handlingFirebaseDB
+                                .getUserDoc()
+                                .get()
+                                .then((value) async {
+                              if (value.exists) {
+                                await handlingFirebaseDB.updateUserImage();
+                              }
+                            });
+                            });
                             if (widget.function != null) {
                               Future.delayed(Duration(seconds: 2), () {
                                 widget.function();

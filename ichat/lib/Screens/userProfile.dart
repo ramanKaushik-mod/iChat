@@ -132,7 +132,7 @@ class _UserProfileState extends State<UserProfile> {
                     borderRadius: BorderRadius.only(
                         bottomLeft: Radius.circular(20),
                         bottomRight: Radius.circular(20))),
-                padding: EdgeInsets.only(bottom: 10),
+                padding: EdgeInsets.symmetric(vertical: 10),
                 width: width,
                 child: Center(
                   child: Consumer<GetChanges>(
@@ -152,7 +152,7 @@ class _UserProfileState extends State<UserProfile> {
                             ),
                             child: CircleAvatar(
                                 radius: height / 14,
-                                backgroundColor: Colors.deepPurple,
+                                backgroundColor: Colors.white,
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(100),
                                   child: value.userImage,
@@ -198,6 +198,7 @@ class _UserProfileState extends State<UserProfile> {
                     color: Colors.white),
                 child: TextField(
                   enabled: false,
+                  textAlignVertical: TextAlignVertical.center,
                   decoration: InputDecoration(
                     prefixIcon: Icon(Icons.phone, color: Colors.deepOrange,),
                     border: UnderlineInputBorder(borderSide: BorderSide.none),

@@ -49,10 +49,12 @@ class _ApproveRequestTileState extends State<ApproveRequestTile> {
   Widget build(BuildContext context) {
         final height = MediaQuery.of(context).size.height;
     return Card(
-      elevation: 0,
-      margin: EdgeInsets.all(8.0),
-      color: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          elevation: 20,
+                          color: Color(0xFFF2F2F7),
+                          shadowColor: Color(0xFFF2F2F7),
+                          margin: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20)),
       child: Container(
         height: 80,
         child: Row(
@@ -82,75 +84,90 @@ class _ApproveRequestTileState extends State<ApproveRequestTile> {
               ),
             ),
             Expanded(
-              child: Container(
-                height: 80,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Flexible(
-                        child: RichText(
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            text: TextSpan(
-                                text: widget.model.name,
-                                style: DecorateText.getDecoratedTextStyle(
-                                        height:height,
-                                    fontSize: 18, color: Colors.grey[400])))),
-                    SizedBox(
-                      height: 10,
-                    ),
-                    Flexible(
-                        child: RichText(
-                            maxLines: 1,
-                            overflow: TextOverflow.clip,
-                            text: TextSpan(
-                                text: widget.model.contactNo,
-                                style: DecorateText.getDecoratedTextStyle(
-                                        height:height,
-                                    fontSize: 12, color: Colors.grey[600])))),
-                  ],
+              child: Card(
+                          elevation: 20,
+                          color: Colors.deepPurple,
+                          shadowColor: Colors.deepPurple,
+                          margin: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20)),
+
+                              child: Container(
+                                padding: EdgeInsets.symmetric(horizontal: 10),
+                  height: 80,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                          child: RichText(
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              text: TextSpan(
+                                  text: widget.model.name,
+                                  style: DecorateText.getDecoratedTextStyle(
+                                          height:height,
+                                      fontSize: 18, color: Colors.white)))),
+                      SizedBox(
+                        height: 4,
+                      ),
+                      Flexible(
+                          child: RichText(
+                              maxLines: 1,
+                              overflow: TextOverflow.clip,
+                              text: TextSpan(
+                                  text: widget.model.contactNo,
+                                  style: DecorateText.getDecoratedTextStyle(
+                                          height:height,
+                                      fontSize: 12, color: Colors.white)))),
+                    ],
+                  ),
                 ),
               ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  TextButton(
-                      style: TextButton.styleFrom(
-                          primary: Colors.white,
-                          backgroundColor: Colors.blue,
+                  Card(
+                          elevation: 20,
+                          color: Color(0xFFF2F2F7),
+                          shadowColor: Color(0xFFF2F2F7),
+                          margin: EdgeInsets.all(2),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20))),
-                      onPressed: () async {
-                        await handlingFirebaseDB.addContactToContactList(
-                            otherContactId: widget.model.contactNo);
+                              borderRadius: BorderRadius.circular(20)),
+                    child: IconButton(
+                      
+                        splashColor: Colors.deepPurple,
+                        splashRadius: 20,
+                        onPressed: () async {
+                          await handlingFirebaseDB.addContactToContactList(
+                              otherContactId: widget.model.contactNo);
 
-                        widget.updateUI('check your contact list');
-                      },
-                      child: Center(
-                          child: Text(
-                        'add',
-                      ))),
-                  SizedBox(
-                    width: 10,
+                          // widget.updateUI('check your contact list');
+                        },
+                        icon: Icon(Icons.add_circle_outline_rounded,color: Colors.deepPurple,)
+                        ,),
                   ),
-                  TextButton(
-                      style: TextButton.styleFrom(
-                          padding:
-                              EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                          primary: Colors.white,
-                          backgroundColor: Colors.blue,
+                  Card(
+                          elevation: 20,
+                          color: Color(0xFFF2F2F7),
+                          shadowColor: Color(0xFFF2F2F7),
+                          margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20))),
-                      onPressed: () async {
-                        await handlingFirebaseDB
-                            .removeRequestFromApprovalAndPendingList(
-                                otherContactId: widget.model.contactNo);
-                        widget.updateUI('request removed');
-                      },
-                      child: Center(child: Text('deny'))),
+                              borderRadius: BorderRadius.circular(20)),
+                    child: IconButton(
+                        splashColor: Colors.red,
+                        splashRadius: 20,
+                        onPressed: () async {
+                          await handlingFirebaseDB
+                              .removeRequestFromApprovalAndPendingList(
+                                  otherContactId: widget.model.contactNo);
+                          widget.updateUI('request removed');
+                        },
+                        icon: Icon(Icons.remove_circle_outline_rounded, color: Colors.red,)
+                  ),)
                 ],
               ),
             )

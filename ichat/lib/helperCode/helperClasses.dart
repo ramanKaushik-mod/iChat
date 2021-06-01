@@ -13,6 +13,8 @@ final String imgKey = 'IMAGE_KEY';
 final String contactNo = 'CONTACT_NUMBER';
 final String lastMessage = 'LAST_MESSAGE';
 final String contactStatus = 'CONTACT_STATUS';
+final String allMsgCount = 'ALL_MSG_COUNT';
+final String gos = 'GLOBAL_ONLINE_STATUS';
 
 class Utility {
   static Future<SharedPreferences> _preferences =
@@ -62,11 +64,12 @@ class Utility {
   }
 
   static setStatus(String status) async {
-    await _preferences.then((value) => value.setString(contactStatus, status));
+    await await _preferences
+        .then((value) => value.setString(contactStatus, status));
   }
 
   static getStatus() async {
-    return _preferences.then((value) => value.getString(contactStatus));
+    return await _preferences.then((value) => value.getString(contactStatus));
   }
 
   static addContactToPreference({@required String contact}) async {
@@ -75,15 +78,41 @@ class Utility {
   }
 
   static getContactFromPreference() async {
-    return _preferences.then((value) => value.getString(contactNo));
+    return await _preferences.then((value) => value.getString(contactNo));
   }
 
   static setLastMessage(String message) async {
-    await _preferences.then((value) => value.setString(lastMessage, message));
+    await await _preferences
+        .then((value) => value.setString(lastMessage, message));
   }
 
   static getLastMessage() async {
-    return _preferences.then((value) => value.getString(lastMessage));
+    return await _preferences.then((value) => value.getString(lastMessage));
+  }
+
+  static getAllMsgC() async {
+    return await _preferences.then((value) => value.getInt(allMsgCount));
+  }
+
+  static initializeAllMsgC() async {
+    await _preferences.then((value) => value.setInt(allMsgCount, 0));
+  }
+
+  static setAllMsgC(int msgCount) async {
+    await _preferences.then((value) =>
+        value.setInt(allMsgCount, value.getInt(allMsgCount) + msgCount));
+  }
+
+  static setAllMsgCToZero() async {
+    await _preferences.then((value) => value.setInt(allMsgCount, 0));
+  }
+
+  static setChatGlobalStatus(bool status) async {
+    await _preferences.then((value) => value.setBool(gos, status));
+  }
+
+  static getChatGlobalStatus() async {
+    return await _preferences.then((value) => value.getBool(gos));
   }
 
   // _exit the app
@@ -93,11 +122,15 @@ class Utility {
 }
 
 class GetChanges extends ChangeNotifier {
+  int chatCount = 0;
+  int getChatCount() => chatCount;
   String userName, userStatus;
   String getUserName() => userName;
   String getUserStatus() => userStatus;
   int time = 30;
   int getUpdateTime() => time;
+  String nameForActiveContactTile;
+  String getNameForActiveContactTile() => nameForActiveContactTile;
 
   int semaphoreForMainScreen = 0;
   int getSemaphoreForMainScreen() => semaphoreForMainScreen;
@@ -105,8 +138,6 @@ class GetChanges extends ChangeNotifier {
   int getUpdatedTime() => currentTime;
   UserTile userTile;
   UserTile getUpdatedUserTile() => userTile;
-  String btnText = 'request';
-  String getbtnText() => btnText;
   Image userImage;
   Future<Image> getUserImage() async {
     userImage = Image.memory(
@@ -114,6 +145,11 @@ class GetChanges extends ChangeNotifier {
       fit: BoxFit.fill,
     );
     return userImage;
+  }
+
+  updateChatCount() async {
+    chatCount = await Utility.getAllMsgC();
+    notifyListeners();
   }
 
   setUserImageToNull() {
@@ -180,13 +216,8 @@ class GetChanges extends ChangeNotifier {
     notifyListeners();
   }
 
-  updateBtnText() {
-    btnText = 'request...';
-    notifyListeners();
-  }
-
-  setBtnText() {
-    btnText = 'request';
+  updateNameForActiveContactTile({@required String name}) {
+    nameForActiveContactTile = name;
     notifyListeners();
   }
 }

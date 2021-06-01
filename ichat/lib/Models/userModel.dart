@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ichat/helperCode/firebaseFunctions.dart';
 import 'package:ichat/helperCode/helperClasses.dart';
-import 'package:provider/provider.dart';
 
 class UserModel {
   final String name;
@@ -40,10 +39,11 @@ class UserTile extends StatefulWidget {
   final UserModel userModel;
   final String buttonText;
   final Function notifyChanges, optional;
+  final BuildContext contextOfMainScreen;
 
   UserTile(
       {@required this.buttonText,
-      // @required this.map,
+      @required this.contextOfMainScreen,
       this.userModel,
       this.notifyChanges,
       this.optional});
@@ -77,7 +77,7 @@ class _UserTileState extends State<UserTile> {
       elevation: 20,
       child: Container(
         width: width,
-        height: 90,
+        height: 80,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           color: Colors.transparent,
@@ -86,7 +86,6 @@ class _UserTileState extends State<UserTile> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
-              flex: 2,
               child: Container(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -95,25 +94,26 @@ class _UserTileState extends State<UserTile> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10.0, vertical: 10),
                       child: Card(
-                          elevation: 20,
-                          color: Color(0xFFF2F2F7),
-                          shadowColor: Color(0xFFF2F2F7),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(50)),
+                        elevation: 20,
+                        color: Color(0xFFF2F2F7),
+                        shadowColor: Color(0xFFF2F2F7),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(50)),
                         child: CircleAvatar(
                           backgroundColor: Colors.deepPurple,
-                          radius: 26,
+                          radius: 27,
                           child: CircleAvatar(
                             backgroundColor: Colors.white,
-                            radius: 25,
+                            radius: 24,
                             child: CircleAvatar(
                               backgroundColor: Colors.blue[50],
-                              radius: 24,
+                              radius: 23,
                               child: ClipRRect(
                                   borderRadius: BorderRadius.circular(50),
                                   child: widget.userModel.imageStr != null
                                       ? Image.memory(
-                                          base64Decode(widget.userModel.imageStr),
+                                          base64Decode(
+                                              widget.userModel.imageStr),
                                           fit: BoxFit.fill,
                                         )
                                       : Icon(Icons.person)),
@@ -122,42 +122,45 @@ class _UserTileState extends State<UserTile> {
                         ),
                       ),
                     ),
-                    Card(
-                          elevation: 20,
-                          color: Color(0xFFF2F2F7),
-                          shadowColor: Color(0xFFF2F2F7),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20)),
-                      child: Container(
-                        padding:
-                            EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: Colors.transparent),
-                        height: 60,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            Text(
-                              widget.userModel.name,
-                              style: GoogleFonts.muli(
-                                  fontSize: height / 48,
-                                  color: Colors.green,
-                                  fontWeight: FontWeight.w600),
-                            ),
-                            Divider(
-                              height: 4,
-                            ),
-                            Text(
-                              widget.userModel.contactNo,
-                              style: GoogleFonts.muli(
-                                fontSize: height / 54,
-                                color: Colors.deepPurple,
-                                fontWeight: FontWeight.w600,
+                    Expanded(
+                      child: Card(
+                        margin: EdgeInsets.all(5),
+                        elevation: 20,
+                        color: Colors.deepPurple,
+                        shadowColor: Colors.deepPurple,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20)),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 10),
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              color: Colors.transparent),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Flexible(
+                                  child: RichText(
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      text: TextSpan(
+                                          text: widget.userModel.name,
+                                          style: DecorateText
+                                              .getDecoratedTextStyle(
+                                                  height: height,
+                                                  fontSize: 17,
+                                                  color: Colors.white)))),
+                              Text(
+                                widget.userModel.contactNo,
+                                style: GoogleFonts.muli(
+                                  fontSize: height / 54,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -165,40 +168,49 @@ class _UserTileState extends State<UserTile> {
                 ),
               ),
             ),
-            Expanded(
-              // alignment: Alignment.centerRight,
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10),
-                child: Card(
-                          elevation: 20,
-                          color: Color(0xFFF2F2F7),
-                          shadowColor: Color(0xFFF2F2F7),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20)),
-                  child: TextButton(
-                      onPressed: () async {
-                        //for request and cancel operations
-                        if (widget.buttonText == 'request') {
-                          var changBtnText =
-                              Provider.of<GetChanges>(context, listen: false);
-                          changBtnText.updateBtnText();
-                          await handlingFirebaseDB.updateRequest(
-                              otherContactId: widget.userModel.contactNo);
-                          widget.notifyChanges();
-                          changBtnText.setBtnText();
-                        } else if (widget.buttonText == 'cancel') {
-                          widget.notifyChanges();
-                        }
-                      },
-                      child: widget.buttonText != 'cancel'
-                          ? Consumer<GetChanges>(
-                              builder:
-                                  (BuildContext context, value, Widget child) {
-                                return Text(value.getbtnText());
-                              },
-                            )
-                          : Text(widget.buttonText)),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10),
+              child: Card(
+                elevation: 20,
+                color: Color(0xFFF2F2F7),
+                shadowColor: Color(0xFFF2F2F7),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+                child: IconButton(
+                  splashColor: widget.buttonText != 'cancel'
+                      ? Colors.deepPurple
+                      : Colors.deepOrange,
+                  splashRadius: 20,
+                  onPressed: () async {
+                    //for request and cancel operations
+                    if (widget.buttonText == 'request') {
+                      widget.notifyChanges();
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text('sending request'),
+                        duration: Duration(milliseconds: 300),
+                      ));
+
+                      await handlingFirebaseDB.updateRequest(
+                          otherContactId: widget.userModel.contactNo);
+                    } else if (widget.buttonText == 'cancel') {
+                      await widget.notifyChanges();
+                      ScaffoldMessenger.of(widget.contextOfMainScreen)
+                          .showSnackBar(SnackBar(
+                        content: Text('request canceled'),
+                        duration: Duration(milliseconds: 300),
+                      ));
+                    }
+                  },
+                  icon: widget.buttonText != 'cancel'
+                      ? Icon(
+                          Icons.add_circle_outline_rounded,
+                          color: Colors.deepPurple,
+                        )
+                      : Icon(
+                          Icons.cancel_outlined,
+                          color: Colors.deepOrange,
+                        ),
                 ),
               ),
             )

@@ -70,6 +70,9 @@ class _ContactTileState extends State<ContactTile> {
               Navigator.pushNamed(context, '/messageScreen',
                   arguments: widget.model.toJson());
             },
+            onLongPress: (){
+              
+            },
             child: Card(
               margin: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
               elevation: 20,
@@ -121,38 +124,47 @@ class _ContactTileState extends State<ContactTile> {
                       ),
                     ),
                     Expanded(
-                      child: Container(
-                        height: 80,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Flexible(
+                      child: Card(
+                        elevation: 20,
+                        margin: EdgeInsets.all(5),
+                        color: Colors.deepPurple,
+                        shadowColor: Colors.deepPurple,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(17)),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Flexible(
+                                  child: RichText(
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      text: TextSpan(
+                                          text: map['name'],
+                                          style:
+                                              DecorateText.getDecoratedTextStyle(
+                                                  height: height,
+                                                  fontSize: 17,
+                                                  color:
+                                                      Colors.deepOrangeAccent)))),
+                                                      Divider(height: 1,color: Colors.white,),
+                              Flexible(
                                 child: RichText(
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     text: TextSpan(
-                                        text: map['name'],
-                                        style:
-                                            DecorateText.getDecoratedTextStyle(
-                                                height: height,
-                                                fontSize: 17,
-                                                color:
-                                                    Colors.deepOrangeAccent)))),
-                            Flexible(
-                              child: RichText(
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  text: TextSpan(
-                                      // text: widget.model.contactStatus,
-                                      text:
-                                          map['contactStatus'],
-                                      style: DecorateText.getDecoratedTextStyle(
-                                          height: height,
-                                          fontSize: 12,
-                                          color: Colors.green))),
-                            )
-                          ],
+                                        // text: widget.model.contactStatus,
+                                        text:
+                                            map['contactStatus'],
+                                        style: DecorateText.getDecoratedTextStyle(
+                                            height: height,
+                                            fontSize: 12,
+                                            color: Colors.green))),
+                              )
+                            ],
+                          ),
                         ),
                       ),
                     )

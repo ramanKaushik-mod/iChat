@@ -68,6 +68,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: FloatingActionButton(
                       onPressed: () async {
                         if (_controller.text.trim().length > 2) {
+                          await Utility.initializeAllMsgC();
                           await Utility.addUserName(_controller.text.trim());
                           UserModel userModel = UserModel(
                               contactNo:
@@ -77,12 +78,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   await Utility.getImageFromPreferences());
 
                           showBottomModal(context, dialogCode: "Loading...");
-                          handlingFirebaseDB.addUserToUsers( userModel:userModel,
+                          handlingFirebaseDB.addUserToUsers(
+                              userModel: userModel,
                               nextPage: () async {
-                            await Utility.addLoginStatus();
-                            await Utility.setStatus(userModel.contactStatus);
-                            Phoenix.rebirth(context);
-                          });
+                                await Utility.addLoginStatus();
+                                await Utility.setStatus(
+                                    userModel.contactStatus);
+                                Phoenix.rebirth(context);
+                                print("starting the app again");
+                              });
                         } else {
                           showBottomModal(context,
                               dialogCode: "enter a valid name ( length > 3 )");
@@ -157,13 +161,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: CircleAvatar(
                             backgroundColor: Color(0xFFF2F2F3),
                             radius: 60,
-                          
                             child: ClipRRect(
                               clipBehavior: Clip.hardEdge,
                               borderRadius: BorderRadius.circular(60),
                               child: AspectRatio(
-                                aspectRatio: 1,
-                                child: imageFromPreferences),
+                                  aspectRatio: 1, child: imageFromPreferences),
                             ),
                           ),
                         ),
@@ -209,8 +211,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 controller: _controller,
                 focusNode: _focusNode,
                 style: DecorateText.getDecoratedTextStyle(
-                  height:height,
-                    fontSize: 20, color: Colors.blue),
+                    height: height, fontSize: 20, color: Colors.blue),
                 textAlign: TextAlign.start,
                 cursorColor: Colors.blue,
                 keyboardType: TextInputType.visiblePassword,

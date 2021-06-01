@@ -71,7 +71,14 @@ class _VerifyNumberScreenState extends State<VerifyNumberScreen> {
             ),
             DecorateText.getDecoratedText(
                 text:
-                    "iChat will send an SMS message to verify your phone number",
+                    "iChat will send an SMS message to verify",
+                height: height,
+                color: Colors.grey[500],
+                fontWeight: FontWeight.w600,
+                little: 'little'),
+                DecorateText.getDecoratedText(
+                text:
+                    "your phone number",
                 height: height,
                 color: Colors.grey[500],
                 fontWeight: FontWeight.w600,
